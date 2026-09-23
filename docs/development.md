@@ -28,11 +28,39 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 Scopes: `backend`, `frontend`, `llm`, `game`, `db`, `api`, `docs`.
 
-## Branches
+## Branches and pull requests
 
-- `main` must always work.
-- Until CI exists (Part 3), work is committed directly to `main`.
-- From Part 3 onward: create a short-lived branch per change (e.g. `feat/level-3-filter`), open a pull request, and merge once CI is green.
+`main` must always work. Nothing is committed to it directly: every change goes through a short-lived branch and a pull request (PR).
+
+**Branch names:** `<type>/<short-description>`, using the same types as commits, e.g. `feat/backend-skeleton`, `fix/suspicion-reset`, `docs/branch-workflow`.
+
+**The workflow:**
+
+```powershell
+# 1. Start from an up-to-date main
+git switch main
+git pull
+
+# 2. Create a branch for the change
+git switch -c feat/backend-skeleton
+
+# 3. Work, then commit (Conventional Commits)
+git add .
+git commit -m "feat(backend): add FastAPI skeleton with health endpoint"
+
+# 4. Push the branch and open a PR
+git push -u origin HEAD
+gh pr create --fill
+
+# 5. Merge once checks pass (squash), then tidy up locally
+gh pr merge --squash --delete-branch
+git switch main
+git pull
+```
+
+**Squash merging:** each PR lands on `main` as a single commit, whose message is the PR title. So PR titles follow Conventional Commits too, and `main` reads as a clean list of changes, one per PR.
+
+From Part 3, CI runs on every PR, and a PR is only merged when CI is green.
 
 ## Line endings
 
