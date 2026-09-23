@@ -38,6 +38,25 @@ Open `.env` in a text editor and paste your key after the matching `=` sign, for
 
 `.env` stays on your computer. It is never uploaded to GitHub.
 
-## 3. Install and run
+## 3. Install and start the backend
 
-_Coming soon, as the backend and frontend are built._
+From the `vault-heist` folder:
+
+```bash
+just install
+just dev
+```
+
+`just install` downloads everything the backend needs (the first time can take a minute). `just dev` starts it. You should see a line ending in `Uvicorn running on http://127.0.0.1:8000`.
+
+Check it's working by opening http://localhost:8000/api/health in your browser. You should see something like:
+
+```json
+{"status": "ok", "model": "anthropic/claude-haiku-4-5-20251001"}
+```
+
+To stop the backend, press `Ctrl+C` in the terminal.
+
+## 4. Play
+
+_Coming soon, once the game and the website are built._
