@@ -1,0 +1,43 @@
+# ---- Secrets (never commit) ----
+.env
+.env.*
+!.env.example
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# ---- Node / frontend ----
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+npm-debug.log*
+
+# ---- Local databases ----
+*.db
+*.sqlite
+*.sqlite3
+
+# ---- Logs ----
+*.log
+
+# ---- Editors and tools ----
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.claude/settings.local.json
+
+# ---- Operating systems ----
+.DS_Store
+Thumbs.db
+desktop.ini
