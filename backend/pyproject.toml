@@ -1,0 +1,63 @@
+[project]
+name = "vault-heist-backend"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.141.1",
+    "pydantic-settings>=2.15.0",
+    "structlog>=26.1.0",
+    "uvicorn[standard]>=0.53.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13.1",
+    "mypy>=2.3.1",
+    "pytest>=9.1.1",
+    "ruff>=0.16.8",
+]
+
+# ---- Ruff: linting and formatting ----
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E", "W",  # pycodestyle: basic style errors and warnings
+    "F",       # pyflakes: unused imports, undefined names
+    "I",       # isort: import order
+    "N",       # pep8-naming
+    "UP",      # pyupgrade: use modern Python syntax
+    "B",       # flake8-bugbear: likely bugs
+    "SIM",     # flake8-simplify
+    "PT",      # flake8-pytest-style
+    "RUF",     # ruff-specific rules
+    "D",       # pydocstyle: docstrings
+]
+ignore = [
+    "D100",  # docstring in every module: not required
+    "D104",  # docstring in every __init__.py: not required
+    "D105",  # docstring on magic methods: not required
+    "D107",  # docstring on __init__: document the class instead
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# Test names describe the behaviour, so docstrings there are optional.
+"tests/**" = ["D"]
+
+# ---- mypy: static type-checking ----
+[tool.mypy]
+python_version = "3.13"
+strict = true
+files = ["app", "tests"]
+plugins = ["pydantic.mypy"]
+
+# ---- pytest ----
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers"

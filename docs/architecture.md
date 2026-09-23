@@ -40,15 +40,17 @@ vault-heist/
 ├── README.md, LICENSE, justfile, .env.example, ...
 ├── .github/workflows/ci.yml      # (planned, Part 3)
 ├── docs/                         # You are here
-├── backend/                      # (planned, Part 2)
-│   └── app/
-│       ├── main.py               # FastAPI app creation
-│       ├── core/                 # config, logging
-│       ├── api/                  # routes and request/response schemas
-│       ├── game/                 # levels, engine, secrets, filters, word list
-│       ├── llm/                  # LLMClient interface, LiteLLM and fake implementations
-│       ├── prompts/guard/        # one prompt file per level
-│       └── db/                   # models, session, repositories
+├── backend/
+│   ├── pyproject.toml, uv.lock   # dependencies and tool settings
+│   ├── app/
+│   │   ├── main.py               # create_app(): the FastAPI app factory
+│   │   ├── core/                 # config (typed settings), logging (structlog)
+│   │   ├── api/                  # routes/ and schemas.py
+│   │   ├── game/                 # (planned, Part 5) levels, engine, secrets, filters, word list
+│   │   ├── llm/                  # (planned, Part 4) LLMClient interface, LiteLLM and fake implementations
+│   │   ├── prompts/guard/        # (planned, Part 5) one prompt file per level
+│   │   └── db/                   # (planned, Part 6) models, session, repositories
+│   └── tests/                    # unit/ and api/
 └── frontend/                     # (planned, Part 8)
     └── src/                      # api client, components, pages, styles
 ```
