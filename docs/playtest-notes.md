@@ -16,17 +16,25 @@ Differences between models and providers, noticed while building and testing.
 
 ### Provider comparison (Part 4)
 
-The same conversation, run through `just chat` with each model. Fill in from your own runs.
+A friendly-then-nosy conversation of about 7 turns with the basic Gus persona (no vault code yet), run through `just chat` on 2026-10-01. Local model on an RTX 4060 Laptop GPU (8 GB).
 
 | | Claude Haiku 4.5 (`anthropic/claude-haiku-4-5-20251001`) | Granite 4.2 8B, local (`ollama_chat/granite4.2:8b`) |
 |---|---|---|
-| Typical latency per reply | | |
-| Input / output tokens per turn | | |
-| Cost per turn | | $0 (runs on your GPU) |
-| Valid JSON first time? Retries / fallbacks seen | | |
-| Stays in character as Gus? | | |
-| Suspicion scores sensible? | | |
-| Notes | | |
+| Latency per reply | 1.2–1.7 s | 3.3–3.8 s (18.7 s for the first reply, while the model loads into the GPU) |
+| Input tokens, turn 1 → turn 7 | 694 → 1,171 | 390 → 810 |
+| Output tokens per reply | 38–67 | 30–54 |
+| Cost per reply | $0.0009 → $0.0014, rising as the history grows | $0 |
+| Valid JSON first time? | Yes, every turn | Yes, every turn |
+| In character as Gus? | Yes: natural small talk, asks the player's name, uses it, notices the nosiness | Yes, gruff and terse, mentions Biscuit and the clipboard dislike from the persona |
+| Suspicion | Rose steadily 2 → 6 as the questions turned to the vault | Jumped to 4 on the first hint, then hovered 3–5 |
+
+**What we learned**
+
+- **Input tokens grow every turn**, because the whole conversation is resent each time. Cost per reply grows with it. This is why there is a message limit per attempt.
+- **Claude's input count starts higher** for the same prompt. The providers count tokens differently, and Anthropic's native structured output adds the JSON schema to the request.
+- **Granite invented security details unprompted.** Asked what he guards, Gus-on-Granite volunteered "the little book with the vault combination written plain". A small model filling gaps with plausible inventions is a gift to an attacker. That's worth remembering in Part 9.
+- **Forcing truncation works as designed.** With `LLM_MAX_TOKENS=15`, both attempts were cut off (`stop_reason=length`), the retry also failed, and the safe fallback reply was used, with suspicion unchanged.
+- **LiteLLM fetched a config file from GitHub at runtime** (Anthropic beta headers). On a slow connection it timed out and added about 10 s to the first call. We now force LiteLLM to use its bundled copy.
 
 ### Earlier notes
 
