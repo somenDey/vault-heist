@@ -45,5 +45,15 @@ format:
 chat *args:
     uv run python -m scripts.chat_cli {{args}}
 
+# Bring the database up to date (creates it the first time)
+[working-directory: 'backend']
+migrate:
+    uv run alembic upgrade head
+
+# Generate a migration after changing app/db/models.py, e.g. `just migration "add nickname"`
+[working-directory: 'backend']
+migration message:
+    uv run alembic revision --autogenerate -m "{{message}}"
+
 # Everything CI checks: lint, types and tests
 check: lint typecheck test

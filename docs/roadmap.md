@@ -22,8 +22,8 @@ Vault Heist is built in seven phases. Each phase leaves a working, documented ga
 | 3 | Quality gates: pre-commit and CI | ✅ Done |
 | 4 | The LLM layer | ✅ Done |
 | 5 | Game logic | ✅ Done |
-| 6 | Database and logging | ⏳ Next |
-| 7 | API endpoints | |
+| 6 | Database and logging | ✅ Done |
+| 7 | API endpoints | ⏳ Next |
 | 8 | Frontend | |
 | 9 | Playtest and learn | |
 | 10 | Documentation pass and `v0.1.0` release | |

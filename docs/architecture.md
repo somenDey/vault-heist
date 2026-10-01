@@ -43,6 +43,27 @@ flowchart LR
 - **`complete_structured()`** asks for JSON matching a Pydantic model (the guard's `{reply, suspicion}`) and validates it. An invalid reply gets one retry, with the error shown to the model; a second failure returns a safe fallback. See [ADR 0004](decisions/0004-structured-output.md).
 - Any provider failure (network, bad key, timeout) is raised as a single `LLMError` type, so callers never handle provider-specific exceptions.
 
+## Storage
+
+```mermaid
+flowchart LR
+    Engine["GameEngine"] -- "events" --> Port["GameRecorder (interface)"]
+    Port -.-> DB["DatabaseRecorder"]
+    Port -.-> Null["NullRecorder<br/>(no storage)"]
+    DB --> Repos["repositories.py"] --> SQLite[("SQLite<br/>vault_heist.db")]
+```
+
+The engine reports every event (attempt started, turn finished, guess made, attempt ended) to a **`GameRecorder`**, and asks it how many messages the player has sent today. It never imports SQLAlchemy. `DatabaseRecorder` stores the events through the repository functions, one short transaction per event. This keeps game rules testable without a database, and storage testable without a model.
+
+| Table | One row per | Key columns |
+|---|---|---|
+| `sessions` | anonymous player | `id` (random UUID), `created_at` |
+| `level_attempts` | try at a level | `level_id`, `secret_code`, `outcome` (`in_progress`, `won`, `caught`, `reset`) |
+| `messages` | player message or Gus reply | `role`, `content`, `suspicion`, `blocked_by_filter`, `unfiltered_content`, `used_fallback`, `model`, `llm_calls`, `input_tokens`, `output_tokens`, `cost_usd`, `latency_ms` |
+| `guesses` | guess at the code | `guess`, `correct` |
+
+Usage columns are filled in for Gus's replies only. When a reply needed a retry, they are totals over both calls (`llm_calls = 2`). All timestamps are UTC. See [ADR 0005](decisions/0005-storage.md) for the design choices.
+
 ## Rules that keep the design clean
 
 - **Business logic lives in `game/`, not in routes.** Routes translate HTTP to function calls and back.
@@ -69,7 +90,9 @@ vault-heist/
 │   │   ├── llm/                  # client.py (LLMClient interface), litellm_client.py,
 │   │   │                         #   fake_client.py (tests), structured.py (validate/retry/fallback)
 │   │   ├── prompts/guard/        # persona.md (Gus), level_1.md, level_2.md
-│   │   └── db/                   # (planned, Part 6) models, session, repositories
+│   │   └── db/                   # models.py (tables), session.py (connections),
+│   │                             #   repositories.py (queries + DatabaseRecorder)
+│   ├── alembic.ini, migrations/  # database migrations (Alembic)
 │   ├── scripts/chat_cli.py       # play the game in the terminal
 │   └── tests/                    # unit/ and api/
 └── frontend/                     # (planned, Part 8)

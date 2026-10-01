@@ -135,6 +135,9 @@ All common actions run through [`just`](https://just.systems/) from the reposito
 | `just typecheck` | Check types with mypy (strict mode) |
 | `just format` | Auto-format and auto-fix what ruff can |
 | `just check` | Everything CI checks: lint, types and tests |
+| `just migrate` | Bring the database up to date (creates it the first time) |
+| `just migration "message"` | Generate a new migration after changing `app/db/models.py` |
+| `just chat` | Play the game in the terminal |
 
 Run `just check` before every commit.
 
@@ -164,7 +167,57 @@ Rules:
 - **Tests never call a real LLM.** From Part 4, tests use a fake LLM client: no network, no cost.
 - Name tests after the behaviour they check, e.g. `test_invalid_value_fails_at_startup`.
 
+- **Tests never use the real database.** The `session_factory` fixture gives each test its own empty SQLite file in a temporary folder.
+- `test_migrations.py` runs every migration on an empty database and then checks the result matches the models, so a model change without a migration fails CI.
+
 FastAPI's test client needs `httpx2` (the successor to `httpx` that Starlette now expects), installed as a dev dependency.
+
+## Database
+
+Every session, level attempt, message and guess is stored (see [architecture](architecture.md#storage)). By default the database is a SQLite file, `backend/vault_heist.db`. It's git-ignored, so each machine has its own.
+
+### Migrations
+
+The tables are created and changed by **migrations**, numbered scripts in `backend/migrations/versions/` managed by [Alembic](https://alembic.sqlalchemy.org/). The database records which migrations it has had, so `just migrate` only runs the new ones.
+
+```powershell
+just migrate                          # bring the database up to date
+just migration "add player nickname"  # after editing app/db/models.py
+```
+
+`just migration` compares the models with the database and writes the migration for you. **Always read it before committing**: autogenerate is a draft, not a guarantee (it can't detect renames, for example). Then run `just migrate`, and commit the migration together with the model change.
+
+Never edit a migration that has already been merged. Write a new one.
+
+### Looking at the data
+
+Python has a built-in SQLite shell. From `backend/`:
+
+```powershell
+uv run python -m sqlite3 vault_heist.db "SELECT id, level_id, secret_code, outcome FROM level_attempts ORDER BY id DESC LIMIT 5"
+```
+
+Useful queries:
+
+```sql
+-- One attempt's conversation, with usage
+SELECT role, content, suspicion, blocked_by_filter, input_tokens, output_tokens, cost_usd, latency_ms
+FROM messages WHERE attempt_id = 1 ORDER BY id;
+
+-- Replies the Level 3 filter blocked, and what Gus really said
+SELECT attempt_id, unfiltered_content FROM messages WHERE blocked_by_filter = 1;
+
+-- Spend and tokens per model
+SELECT model, COUNT(*) AS replies, SUM(input_tokens), SUM(output_tokens), ROUND(SUM(cost_usd), 4)
+FROM messages WHERE role = 'assistant' GROUP BY model;
+
+-- How attempts end, per level
+SELECT level_id, outcome, COUNT(*) FROM level_attempts GROUP BY level_id, outcome;
+```
+
+For browsing, a GUI such as [DB Browser for SQLite](https://sqlitebrowser.org/) can open the same file.
+
+To start again from an empty database, delete `backend/vault_heist.db` and run `just migrate`.
 
 ## Configuration
 

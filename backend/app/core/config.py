@@ -44,9 +44,14 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr | None = None
     ollama_api_base: str = "http://localhost:11434"
 
+    # ---- Database ----
+    # Defaults to a SQLite file in backend/, wherever the app is started from.
+    database_url: str = f"sqlite:///{(REPO_ROOT / 'backend' / 'vault_heist.db').as_posix()}"
+
     # ---- Cost protection ----
     max_message_chars: int = Field(default=500, gt=0)
     max_messages_per_attempt: int = Field(default=30, gt=0)
+    max_messages_per_session_per_day: int = Field(default=200, gt=0)
 
 
 @lru_cache
