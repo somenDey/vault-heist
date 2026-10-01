@@ -60,7 +60,63 @@ git pull
 
 **Squash merging:** each PR lands on `main` as a single commit, whose message is the PR title. So PR titles follow Conventional Commits too, and `main` reads as a clean list of changes, one per PR.
 
-From Part 3, CI runs on every PR, and a PR is only merged when CI is green.
+CI runs on every PR, and `main` only accepts a PR once CI is green.
+
+## Quality gates
+
+Problems are caught in three places, each one earlier and cheaper than the next:
+
+| Where | What runs | When |
+|---|---|---|
+| Your editor | ruff and mypy (with the extensions) | As you type |
+| **pre-commit hooks** | File hygiene, secret scan, ruff, mypy | On every `git commit` |
+| **CI** (GitHub Actions) | `just check` (lint, types, tests) and a full-history secret scan | On every push to a PR and to `main` |
+
+### pre-commit hooks
+
+One-time setup per machine: install pre-commit and [gitleaks](https://github.com/gitleaks/gitleaks).
+
+```powershell
+uv tool install pre-commit
+winget install --id Gitleaks.Gitleaks -e      # macOS: brew install gitleaks
+```
+
+One-time setup per clone:
+
+```powershell
+pre-commit install
+```
+
+After that, every `git commit` runs the hooks in [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) on the staged files:
+
+- **no-commit-to-branch:** refuses commits made directly on `main`.
+- **File hygiene:** trailing whitespace, missing final newline, CRLF line endings, invalid YAML/TOML, leftover merge-conflict markers, files over 500 KB.
+- **gitleaks:** blocks the commit if it contains anything that looks like a secret (API keys, tokens, private keys).
+- **ruff check / ruff format / mypy:** the same checks as `just lint` and `just typecheck`, run through `uv` so they use the versions in `uv.lock`.
+
+If a hook **fixes** something (whitespace, formatting), the commit stops so you can review the change. Run `git add` again and re-commit. If a hook **fails**, fix the problem and commit again.
+
+Other useful commands:
+
+```powershell
+pre-commit run --all-files     # run every hook on every file
+pre-commit autoupdate          # bump hook versions (review the diff)
+```
+
+Never skip hooks with `--no-verify`. If a hook is wrong, fix the hook.
+
+### Continuous integration
+
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs two jobs on GitHub's Linux machines:
+
+- **Backend:** installs uv and just, runs `just install` (which fails if `uv.lock` is out of date) and then `just check`.
+- **Secret scan:** runs gitleaks over the full git history, so a secret committed without the local hook is still caught.
+
+Both are **required status checks** on `main`: a PR can't be merged until both pass. The badge at the top of the README shows the latest result on `main`.
+
+### If a secret is ever committed
+
+Removing it in a later commit is **not** enough, because it stays in the git history. Revoke the key with the provider immediately, create a new one, and only then clean up the repository.
 
 ## Line endings
 

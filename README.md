@@ -1,5 +1,8 @@
 # 🏦 Vault Heist
 
+[![CI](https://github.com/somenDey/vault-heist/actions/workflows/ci.yml/badge.svg)](https://github.com/somenDey/vault-heist/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **Talk your way into the vault.** Vault Heist is a web game where you try to rob a bank by chatting with its AI security guard. The guard knows the vault code. Your job is to trick them into giving it away. Each level adds stronger defences.
 
 Under the surface, it's a **security testbed for AI agents**: a hands-on way to explore prompt injection, guardrails, evaluation and observability. Every attempt is logged, and in later phases every attack that works becomes a test the defences must pass from then on.

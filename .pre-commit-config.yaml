@@ -1,0 +1,55 @@
+# Checks that run automatically on every `git commit`.
+# Setup (once per clone):  pre-commit install
+# Run on everything:       pre-commit run --all-files
+# https://pre-commit.com
+#
+# Python tools (ruff, mypy) run through uv, so they use exactly the versions
+# in backend/uv.lock and the settings in backend/pyproject.toml, the same as
+# `just check` and CI.
+
+repos:
+  # ---- General file hygiene ----
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: no-commit-to-branch # never commit directly to main
+        args: [--branch, main]
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+  - repo: local
+    hooks:
+      # Needs gitleaks installed (Windows: winget install Gitleaks.Gitleaks).
+      - id: gitleaks
+        name: gitleaks (secrets)
+        entry: gitleaks git --pre-commit --redact --staged --verbose
+        language: unsupported
+        pass_filenames: false
+
+      # ---- Backend: lint, format, types ----
+      - id: ruff-check
+        name: ruff check (backend)
+        entry: uv run --directory backend ruff check --fix
+        language: unsupported # pre-commit doesn't manage the environment; uv does
+        files: ^backend/.*\.py$
+        pass_filenames: false
+      - id: ruff-format
+        name: ruff format (backend)
+        entry: uv run --directory backend ruff format
+        language: unsupported
+        files: ^backend/.*\.py$
+        pass_filenames: false
+      - id: mypy
+        name: mypy (backend)
+        entry: uv run --directory backend mypy
+        language: unsupported
+        files: ^backend/(.*\.py|pyproject\.toml)$
+        pass_filenames: false
