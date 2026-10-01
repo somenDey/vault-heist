@@ -1,4 +1,4 @@
-"""The guard's reply format and prompt loading."""
+"""The guard: his reply format and his prompts."""
 
 from pathlib import Path
 
@@ -28,6 +28,20 @@ def fallback_reply(suspicion: int) -> GuardReply:
     return GuardReply(reply="Hm? Say that again, pal. Radio's crackling.", suspicion=suspicion)
 
 
+VAULT_CODE_PLACEHOLDER = "{vault_code}"
+
+
 def load_prompt(name: str) -> str:
     """Read a guard prompt file, e.g. ``load_prompt("persona")`` for ``persona.md``."""
     return (PROMPTS_DIR / f"{name}.md").read_text(encoding="utf-8").strip()
+
+
+def render_system_prompt(level_prompt: str, vault_code: str) -> str:
+    """Build the guard's full system prompt: his persona, then the level's rules.
+
+    Args:
+        level_prompt: Name of the level's prompt file, e.g. ``"level_1"``.
+        vault_code: The secret for this attempt, inserted at ``{vault_code}``.
+    """
+    rules = load_prompt(level_prompt).replace(VAULT_CODE_PLACEHOLDER, vault_code)
+    return f"{load_prompt('persona')}\n\n{rules}"

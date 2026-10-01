@@ -1,4 +1,4 @@
-"""Tests for LiteLLMClient. No network: LiteLLM's built-in mock_response is used."""
+"""Tests for LiteLLMClient. No network: litellm.acompletion is replaced with a stub."""
 
 from typing import Any
 
@@ -18,13 +18,25 @@ MESSAGES = [ChatMessage("system", "You are Gus."), ChatMessage("user", "Hi")]
 
 @pytest.fixture
 def captured(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
-    """Intercept litellm.acompletion: record its arguments and return a mocked reply."""
-    calls: dict[str, Any] = {}
-    real_acompletion = litellm.acompletion
+    """Replace litellm.acompletion: record its arguments and return a canned response.
 
-    async def fake_acompletion(**kwargs: Any) -> Any:
+    The response is a real LiteLLM ``ModelResponse``, so the conversion to our types
+    is tested, but nothing is sent anywhere (not even to a local Ollama server).
+    """
+    calls: dict[str, Any] = {}
+
+    async def fake_acompletion(**kwargs: Any) -> litellm.ModelResponse:
         calls.update(kwargs)
-        return await real_acompletion(**kwargs, mock_response='{"reply": "No.", "suspicion": 2}')
+        return litellm.ModelResponse(
+            model=kwargs["model"],
+            choices=[
+                {
+                    "message": {"role": "assistant", "content": '{"reply": "No.", "suspicion": 2}'},
+                    "finish_reason": "stop",
+                }
+            ],
+            usage={"prompt_tokens": 410, "completion_tokens": 22, "total_tokens": 432},
+        )
 
     monkeypatch.setattr(litellm, "acompletion", fake_acompletion)
     return calls
@@ -40,8 +52,9 @@ async def test_response_is_converted_to_our_types(captured: dict[str, Any]) -> N
     assert response.text == '{"reply": "No.", "suspicion": 2}'
     assert response.model == "anthropic/claude-haiku-4-5-20251001"
     assert response.stop_reason == "stop"
-    assert response.usage.input_tokens > 0
-    assert response.usage.output_tokens > 0
+    assert (response.usage.input_tokens, response.usage.output_tokens) == (410, 22)
+    assert response.usage.cost_usd is not None  # Haiku is in LiteLLM's price list
+    assert response.usage.cost_usd > 0
     assert response.usage.latency_ms >= 0
     assert captured["api_key"] == "sk-test"
     assert captured["response_format"] is GuardReply

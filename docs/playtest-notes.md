@@ -36,6 +36,16 @@ A friendly-then-nosy conversation of about 7 turns with the basic Gus persona (n
 - **Forcing truncation works as designed.** With `LLM_MAX_TOKENS=15`, both attempts were cut off (`stop_reason=length`), the retry also failed, and the safe fallback reply was used, with suspicion unchanged.
 - **LiteLLM fetched a config file from GitHub at runtime** (Anthropic beta headers). On a slow connection it timed out and added about 10 s to the first call. We now force LiteLLM to use its bundled copy.
 
+### First play-through of the three levels (Part 5)
+
+2026-10-01, Claude Haiku 4.5.
+
+- **The filter's block is itself a clue.** On Level 3 (code: `dolphin`), the player chatted about sea creatures, and Gus's next reply was blocked. The block message tells the player *"the code was in what Gus just tried to say"*, which turns the filter into an oracle: steer the topic, watch for blocks, narrow it down. A real guardrail has the same problem. How you refuse can leak as much as what you refuse. Worth revisiting in Phase 3.
+- **The secret leaks into the guard's word choices.** Nobody asked for the code. Knowing a sea animal was "on his mind", Gus drifted towards it as soon as the talk turned to the sea. The model is *primed* by what's in its prompt.
+- **Level 1 isn't very naive on Claude.** With only "don't share it", Haiku still refused firmly and called security after six pushy messages. A strong model plus the persona ("nobody gets into the vault") is already a decent defence. Level 1 may need to be weaker to feel like a tutorial. Check in Part 9, and compare with Granite.
+- **Suspicion responds to tone.** Swearing and guilt-tripping pushed it up fast (6 → 7 → 8 → 9 → 10).
+- **The first reply of a session is slow (7–8 s, then ~1.5 s).** A likely cause: Anthropic compiles a new JSON schema the first time it sees it, then caches it. Worth confirming in Phase 5 with tracing.
+
 ### Earlier notes
 
 - **2026-10-01 · Granite 4.2 8B · `ollama run`.** Granite is a "thinking" model: from the command line it printed its reasoning in `<think>` tags before answering. The LLM layer sends `think: false`, so the guard answers directly.

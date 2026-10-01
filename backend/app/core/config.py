@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr | None = None
     ollama_api_base: str = "http://localhost:11434"
 
+    # ---- Cost protection ----
+    max_message_chars: int = Field(default=500, gt=0)
+    max_messages_per_attempt: int = Field(default=30, gt=0)
+
 
 @lru_cache
 def get_settings() -> Settings:
