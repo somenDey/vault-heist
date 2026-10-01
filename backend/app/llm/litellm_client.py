@@ -10,9 +10,12 @@ from pydantic import BaseModel, SecretStr
 from app.core.config import Settings
 from app.llm.client import ChatMessage, LLMError, LLMResponse, LLMUsage
 
-# Use the price list bundled with LiteLLM instead of downloading it on import.
+# Use the data files bundled with LiteLLM instead of downloading them at runtime:
+# the model price list, and Anthropic's list of supported beta headers.
+# Without this, a slow or blocked network adds seconds to the first call.
 # Must be set before litellm is imported.
 os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
+os.environ.setdefault("LITELLM_LOCAL_ANTHROPIC_BETA_HEADERS", "True")
 
 import litellm
 
