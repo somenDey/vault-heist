@@ -22,9 +22,26 @@ flowchart LR
 1. The **frontend** posts the message to `POST /api/levels/{level_id}/chat`.
 2. The **route** validates the request and hands it to the game engine. It contains no game logic.
 3. The **game engine** checks the limits, builds the conversation (level prompt + history + new message), and asks the `LLMClient` for a reply.
-4. The **`LLMClient`** calls the model through LiteLLM and validates the reply against the `{reply, suspicion}` shape. If validation fails, it retries once, then falls back to a safe reply. It returns the reply along with tokens, cost and latency.
+4. **`complete_structured()`** sends the conversation through the **`LLMClient`** and validates the reply against the `{reply, suspicion}` shape. If validation fails, it retries once, then falls back to a safe reply. Every call's tokens, cost and latency come back with it.
 5. On Level 3, the **output filter** checks the reply for the code and blocks it if found.
 6. The engine applies the **suspicion rule** (10 = caught → reset), saves everything to the **database**, and returns the reply and suspicion to the frontend.
+
+## The LLM layer
+
+```mermaid
+flowchart LR
+    Caller["Game code / chat CLI"] --> Structured["complete_structured()<br/>validate · retry once · fallback"]
+    Structured --> Interface["LLMClient (interface)"]
+    Interface -.-> Real["LiteLLMClient"]
+    Interface -.-> Fake["FakeLLMClient<br/>(tests)"]
+    Real --> Providers[("Anthropic · OpenAI · Gemini · Ollama")]
+```
+
+- **`LLMClient`** is a small interface: give it messages, get back an `LLMResponse` with the text, why generation stopped, and usage (input/output tokens, cost in USD, latency in ms).
+- **`LiteLLMClient`** implements it for any provider. The model is chosen by `LLM_MODEL` in `.env`, and the matching API key is passed explicitly.
+- **`FakeLLMClient`** returns scripted replies, so tests need no network and cost nothing.
+- **`complete_structured()`** asks for JSON matching a Pydantic model (the guard's `{reply, suspicion}`) and validates it. An invalid reply gets one retry, with the error shown to the model; a second failure returns a safe fallback. See [ADR 0004](decisions/0004-structured-output.md).
+- Any provider failure (network, bad key, timeout) is raised as a single `LLMError` type, so callers never handle provider-specific exceptions.
 
 ## Rules that keep the design clean
 
@@ -38,7 +55,7 @@ flowchart LR
 ```
 vault-heist/
 ├── README.md, LICENSE, justfile, .env.example, ...
-├── .github/workflows/ci.yml      # (planned, Part 3)
+├── .github/workflows/ci.yml      # CI: lint, types, tests, secret scan
 ├── docs/                         # You are here
 ├── backend/
 │   ├── pyproject.toml, uv.lock   # dependencies and tool settings
@@ -46,10 +63,13 @@ vault-heist/
 │   │   ├── main.py               # create_app(): the FastAPI app factory
 │   │   ├── core/                 # config (typed settings), logging (structlog)
 │   │   ├── api/                  # routes/ and schemas.py
-│   │   ├── game/                 # (planned, Part 5) levels, engine, secrets, filters, word list
-│   │   ├── llm/                  # (planned, Part 4) LLMClient interface, LiteLLM and fake implementations
-│   │   ├── prompts/guard/        # (planned, Part 5) one prompt file per level
+│   │   ├── game/                 # guard.py (reply format, prompt loading); levels, engine,
+│   │   │                         #   secrets, filters and word list planned for Part 5
+│   │   ├── llm/                  # client.py (LLMClient interface), litellm_client.py,
+│   │   │                         #   fake_client.py (tests), structured.py (validate/retry/fallback)
+│   │   ├── prompts/guard/        # persona.md (Gus); one prompt per level from Part 5
 │   │   └── db/                   # (planned, Part 6) models, session, repositories
+│   ├── scripts/chat_cli.py       # chat with the guard in the terminal
 │   └── tests/                    # unit/ and api/
 └── frontend/                     # (planned, Part 8)
     └── src/                      # api client, components, pages, styles

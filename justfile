@@ -40,5 +40,10 @@ format:
     uv run ruff format .
     uv run ruff check --fix .
 
+# Chat with Gus in the terminal, e.g. `just chat --model ollama_chat/granite4.2:8b`
+[working-directory: 'backend']
+chat *args:
+    uv run python -m scripts.chat_cli {{args}}
+
 # Everything CI checks: lint, types and tests
 check: lint typecheck test

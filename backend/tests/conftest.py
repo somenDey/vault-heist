@@ -10,6 +10,12 @@ from app.main import create_app
 
 
 @pytest.fixture
+def anyio_backend() -> str:
+    """Run `@pytest.mark.anyio` tests on asyncio (the anyio plugin ships with FastAPI)."""
+    return "asyncio"
+
+
+@pytest.fixture
 def settings() -> Settings:
     """Settings for tests: ignores the developer's .env, so tests behave the same everywhere."""
     return Settings(_env_file=None, llm_model="fake/test-model")
