@@ -5,6 +5,9 @@ Run from the repo root with ``just chat``, or from ``backend/``:
     uv run python -m scripts.chat_cli
     uv run python -m scripts.chat_cli --model ollama_chat/granite4.2:8b --level 2
 
+Every session, message and guess is saved to the database (DATABASE_URL).
+Run ``just migrate`` once first to create the tables.
+
 Type to talk to Gus. Commands:
     /guess WORD   try a vault code
     /level N      switch to level N
@@ -15,12 +18,17 @@ Type to talk to Gus. Commands:
 
 import argparse
 import asyncio
+import sys
+
+from sqlalchemy.exc import OperationalError
 
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
+from app.db.repositories import DatabaseRecorder, create_session
+from app.db.session import create_db_engine, make_session_factory
 from app.game.engine import Attempt, ChatTurn, GameEngine, GameError
 from app.game.guard import MAX_SUSPICION
-from app.game.levels import LEVELS, UnknownLevelError
+from app.game.levels import LEVELS, UnknownLevelError, get_level
 from app.llm.client import LLMError, LLMResponse
 from app.llm.litellm_client import LiteLLMClient
 
@@ -95,7 +103,9 @@ class TerminalGame:
             if command == "/guess":
                 self.guess(argument)
             elif command == "/level":
-                self.start_level(int(argument))
+                level = get_level(int(argument))  # Check it exists before leaving this one.
+                self._engine.abandon(self.attempt)  # Leaving a level counts as a reset.
+                self.start_level(level.id)
             elif command == "/levels":
                 for level in LEVELS:
                     print(f"  {level.id}. {level.name}: {level.description}")
@@ -160,8 +170,17 @@ def main() -> None:
     if args.model:
         settings = settings.model_copy(update={"llm_model": args.model})
     configure_logging("WARNING", settings.log_format)
-    engine = GameEngine.from_settings(settings, LiteLLMClient.from_settings(settings))
-    print(f"Vault Heist · model: {settings.llm_model}")
+
+    session_factory = make_session_factory(create_db_engine(settings.database_url))
+    try:
+        with session_factory.begin() as db:
+            session_id = create_session(db).id
+    except OperationalError:
+        sys.exit("The database isn't set up yet. Run `just migrate` first.")
+    recorder = DatabaseRecorder(session_factory, session_id)
+
+    engine = GameEngine.from_settings(settings, LiteLLMClient.from_settings(settings), recorder)
+    print(f"Vault Heist · model: {settings.llm_model} · session: {session_id}")
     asyncio.run(TerminalGame(engine, reveal=args.reveal).run(args.level))
 
 

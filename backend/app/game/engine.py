@@ -1,12 +1,13 @@
 """The game rules: chatting with the guard, guessing the code, suspicion and limits.
 
 The engine knows nothing about HTTP or databases. It works on `Attempt` objects
-that the caller keeps (the CLI in memory; later, the API in the database).
+that the caller keeps, and reports everything that happens to a `GameRecorder`.
+The database is one recorder (``app/db``); tests can use another, or none.
 """
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, Protocol
 
 import structlog
 
@@ -43,6 +44,10 @@ class MessageLimitReachedError(GameError):
     """The player has used every message allowed in this attempt."""
 
 
+class DailyLimitReachedError(GameError):
+    """The player has used every message allowed for their session today."""
+
+
 @dataclass
 class Attempt:
     """One try at one level: a single vault code and a single conversation.
@@ -56,6 +61,7 @@ class Attempt:
     suspicion: int = 0
     messages_sent: int = 0
     outcome: Outcome = "in_progress"
+    id: int | None = None  # Set by the recorder, e.g. the database row id.
 
     @property
     def is_over(self) -> bool:
@@ -69,6 +75,8 @@ class ChatTurn:
 
     Attributes:
         reply: What the player sees from Gus (already filtered).
+        original_reply: What Gus actually said, before the filter. Kept for analysis;
+            never shown to the player.
         suspicion: Gus's suspicion after this message.
         caught: True if suspicion reached the maximum and Gus called security.
         blocked_by_filter: True if the output filter replaced Gus's reply.
@@ -77,6 +85,7 @@ class ChatTurn:
     """
 
     reply: str
+    original_reply: str
     suspicion: int
     caught: bool
     blocked_by_filter: bool
@@ -86,10 +95,56 @@ class ChatTurn:
 
 @dataclass(frozen=True)
 class Limits:
-    """Cost-protection limits applied to every attempt."""
+    """Cost-protection limits."""
 
     max_message_chars: int
     max_messages_per_attempt: int
+    max_messages_per_day: int = 200  # Per player session; needs a recorder that counts.
+
+
+class GameRecorder(Protocol):
+    """Receives every game event, e.g. to store it. One recorder per player session."""
+
+    def attempt_started(self, attempt: Attempt) -> int | None:
+        """Record a new attempt and return its id (or None if ids aren't tracked)."""
+        ...
+
+    def turn_finished(self, attempt: Attempt, player_text: str, turn: "ChatTurn") -> None:
+        """Record the player's message and Gus's reply."""
+        ...
+
+    def guess_made(self, attempt: Attempt, guess: str, correct: bool) -> None:
+        """Record a guess at the vault code."""
+        ...
+
+    def attempt_ended(self, attempt: Attempt) -> None:
+        """Record that an attempt was won, caught or reset."""
+        ...
+
+    def messages_sent_today(self) -> int:
+        """How many messages this player session has sent today (UTC)."""
+        ...
+
+
+class NullRecorder:
+    """A recorder that keeps nothing. Without storage, the daily limit can't be counted."""
+
+    def attempt_started(self, attempt: Attempt) -> int | None:
+        """Do nothing."""
+        return None
+
+    def turn_finished(self, attempt: Attempt, player_text: str, turn: "ChatTurn") -> None:
+        """Do nothing."""
+
+    def guess_made(self, attempt: Attempt, guess: str, correct: bool) -> None:
+        """Do nothing."""
+
+    def attempt_ended(self, attempt: Attempt) -> None:
+        """Do nothing."""
+
+    def messages_sent_today(self) -> int:
+        """Always zero."""
+        return 0
 
 
 class GameEngine:
@@ -102,25 +157,31 @@ class GameEngine:
         limits: Limits,
         max_tokens: int,
         temperature: float,
+        recorder: GameRecorder | None = None,
         code_generator: Callable[[], str] = generate_vault_code,
     ) -> None:
         self._client = client
         self._limits = limits
         self._max_tokens = max_tokens
         self._temperature = temperature
+        self._recorder: GameRecorder = recorder or NullRecorder()
         self._code_generator = code_generator
 
     @classmethod
-    def from_settings(cls, settings: Settings, client: LLMClient) -> "GameEngine":
+    def from_settings(
+        cls, settings: Settings, client: LLMClient, recorder: GameRecorder | None = None
+    ) -> "GameEngine":
         """Build an engine with the limits and model settings from config."""
         return cls(
             client,
             limits=Limits(
                 max_message_chars=settings.max_message_chars,
                 max_messages_per_attempt=settings.max_messages_per_attempt,
+                max_messages_per_day=settings.max_messages_per_session_per_day,
             ),
             max_tokens=settings.llm_max_tokens,
             temperature=settings.llm_temperature,
+            recorder=recorder,
         )
 
     def start_attempt(self, level_id: int) -> Attempt:
@@ -129,7 +190,9 @@ class GameEngine:
         Raises:
             UnknownLevelError: If the level doesn't exist.
         """
-        return Attempt(level=get_level(level_id), vault_code=self._code_generator())
+        attempt = Attempt(level=get_level(level_id), vault_code=self._code_generator())
+        attempt.id = self._recorder.attempt_started(attempt)
+        return attempt
 
     def messages_left(self, attempt: Attempt) -> int:
         """How many more messages the player may send in this attempt."""
@@ -174,14 +237,19 @@ class GameEngine:
         if caught:
             attempt.outcome = "caught"
 
-        return ChatTurn(
+        turn = ChatTurn(
             reply=reply,
+            original_reply=result.value.reply,
             suspicion=attempt.suspicion,
             caught=caught,
             blocked_by_filter=leak is not None,
             used_fallback=result.used_fallback,
             responses=result.responses,
         )
+        self._recorder.turn_finished(attempt, text, turn)
+        if caught:
+            self._recorder.attempt_ended(attempt)
+        return turn
 
     def guess(self, attempt: Attempt, guess: str) -> bool:
         """Check a guess at the vault code. A correct guess wins the attempt.
@@ -193,14 +261,17 @@ class GameEngine:
         """
         self._check_not_over(attempt)
         correct = guess.strip().lower() == attempt.vault_code.lower()
+        self._recorder.guess_made(attempt, guess.strip(), correct)
         if correct:
             attempt.outcome = "won"
+            self._recorder.attempt_ended(attempt)
         return correct
 
     def abandon(self, attempt: Attempt) -> None:
         """End an attempt because the player chose to reset the level."""
         if not attempt.is_over:
             attempt.outcome = "reset"
+            self._recorder.attempt_ended(attempt)
 
     def _check_can_send(self, attempt: Attempt, text: str) -> None:
         """Raise a `GameError` if this message isn't allowed."""
@@ -216,6 +287,11 @@ class GameEngine:
             raise MessageLimitReachedError(
                 f"You've used all {self._limits.max_messages_per_attempt} messages for this "
                 "attempt. Make a guess, or reset the level."
+            )
+        if self._recorder.messages_sent_today() >= self._limits.max_messages_per_day:
+            raise DailyLimitReachedError(
+                f"You've sent {self._limits.max_messages_per_day} messages today, the daily "
+                "limit. Gus's shift is over; come back tomorrow."
             )
 
     @staticmethod

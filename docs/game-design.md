@@ -59,6 +59,6 @@ API calls cost money, so these limits apply from day one. All are configurable i
 |---|---|---|
 | Maximum message length | `MAX_MESSAGE_CHARS` | 500 characters |
 | Messages per level attempt | `MAX_MESSAGES_PER_ATTEMPT` | 30 |
-| Messages per session per day | `MAX_MESSAGES_PER_SESSION_PER_DAY` | 200 (enforced from Part 6, when messages are stored) |
+| Messages per session per day | `MAX_MESSAGES_PER_SESSION_PER_DAY` | 200, counted from midnight UTC across all levels and attempts |
 
 A message that breaks a limit is refused before any model call, so it costs nothing.
