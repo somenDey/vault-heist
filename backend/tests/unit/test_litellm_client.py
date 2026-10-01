@@ -93,3 +93,17 @@ async def test_from_settings_points_ollama_at_the_local_server(captured: dict[st
 
     assert captured["api_base"] == "http://localhost:11434"
     assert captured["api_key"] is None
+
+
+async def test_local_models_cost_nothing_and_skip_the_price_lookup(
+    captured: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def price_lookup(**kwargs: Any) -> float:
+        raise AssertionError("LiteLLM's price lookup should not be called for local models")
+
+    monkeypatch.setattr(litellm, "completion_cost", price_lookup)
+    client = LiteLLMClient("ollama_chat/granite4.2:8b")
+
+    response = await client.complete(MESSAGES, max_tokens=50, temperature=0)
+
+    assert response.usage.cost_usd == 0.0

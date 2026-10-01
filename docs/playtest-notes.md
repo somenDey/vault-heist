@@ -35,6 +35,7 @@ A friendly-then-nosy conversation of about 7 turns with the basic Gus persona (n
 - **Granite invented security details unprompted.** Asked what he guards, Gus-on-Granite volunteered "the little book with the vault combination written plain". A small model filling gaps with plausible inventions is a gift to an attacker. That's worth remembering in Part 9.
 - **Forcing truncation works as designed.** With `LLM_MAX_TOKENS=15`, both attempts were cut off (`stop_reason=length`), the retry also failed, and the safe fallback reply was used, with suspicion unchanged.
 - **LiteLLM fetched a config file from GitHub at runtime** (Anthropic beta headers). On a slow connection it timed out and added about 10 s to the first call. We now force LiteLLM to use its bundled copy.
+- **LiteLLM's price lookup for Ollama asks the Ollama server about the model** (`/api/show`) on every call, adding about 2 s on the development machine. Local models are free, so we now price them at zero without asking.
 
 ### First play-through of the three levels (Part 5)
 
