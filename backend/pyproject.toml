@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.141.1",
+    "litellm>=1.103.1",
     "pydantic-settings>=2.15.0",
     "structlog>=26.1.0",
     "uvicorn[standard]>=0.53.0",
@@ -53,7 +54,7 @@ convention = "google"
 [tool.mypy]
 python_version = "3.13"
 strict = true
-files = ["app", "tests"]
+files = ["app", "scripts", "tests"]
 plugins = ["pydantic.mypy"]
 
 # ---- pytest ----
@@ -61,3 +62,7 @@ plugins = ["pydantic.mypy"]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-ra --strict-markers"
+filterwarnings = [
+    # Noise from inside LiteLLM's own types, not our code.
+    "ignore:.*ReadOnly.*:UserWarning",
+]

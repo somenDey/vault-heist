@@ -16,3 +16,4 @@
 - [0001 – Record architecture decisions](decisions/0001-record-architecture-decisions.md)
 - [0002 – Phase 1 tech stack](decisions/0002-phase-1-tech-stack.md)
 - [0003 – Quality gates: pre-commit hooks and CI](decisions/0003-quality-gates.md)
+- [0004 – Structured output from the guard](decisions/0004-structured-output.md)

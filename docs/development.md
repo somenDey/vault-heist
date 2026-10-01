@@ -172,6 +172,29 @@ Settings are defined in `backend/app/core/config.py` as a typed `Settings` class
 
 To add a setting: add a typed field with a default to `Settings`, add the variable to `.env.example`, and document it where it's used.
 
+## Talking to the guard in the terminal
+
+`just chat` starts a conversation with Gus using the model in `LLM_MODEL`. Pass `--model` to try another without editing `.env`:
+
+```powershell
+just chat
+just chat --model ollama_chat/granite4.2:8b
+```
+
+Each reply shows Gus's suspicion and a usage line: model, input/output tokens, cost and latency. Type `/reset` to start over and `/quit` to leave.
+
+### Using a local model (Ollama)
+
+Local models are free and private, and good for fast iteration. Install [Ollama](https://ollama.com/), download a model, and point `LLM_MODEL` at it with the `ollama_chat/` prefix:
+
+```powershell
+winget install --id Ollama.Ollama -e
+ollama pull granite4.2:8b
+ollama ps          # after first use: PROCESSOR should say 100% GPU
+```
+
+An 8B model needs about 6 GB of GPU memory. If `ollama ps` shows part of it on the CPU, replies will be much slower.
+
 ## Adding a level
 
 _Added in Part 5._

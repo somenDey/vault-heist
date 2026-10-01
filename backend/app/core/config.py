@@ -4,6 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # config.py -> core -> app -> backend -> repository root
@@ -31,7 +32,17 @@ class Settings(BaseSettings):
     app_name: str = "Vault Heist"
     log_level: LogLevel = "INFO"
     log_format: LogFormat = "console"
+
+    # ---- LLM ----
     llm_model: str = "anthropic/claude-haiku-4-5-20251001"
+    llm_temperature: float = Field(default=0.7, ge=0, le=2)
+    llm_max_tokens: int = Field(default=400, gt=0)
+    llm_timeout_seconds: float = Field(default=30, gt=0)
+    # SecretStr hides the value in logs and error messages: it prints as '**********'.
+    anthropic_api_key: SecretStr | None = None
+    openai_api_key: SecretStr | None = None
+    gemini_api_key: SecretStr | None = None
+    ollama_api_base: str = "http://localhost:11434"
 
 
 @lru_cache
