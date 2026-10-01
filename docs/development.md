@@ -159,7 +159,7 @@ Commit `pyproject.toml` and `uv.lock` together.
 Tests live in `backend/tests/`:
 
 - `unit/`: one piece of logic in isolation, no HTTP.
-- `api/`: endpoints, called through FastAPI's `TestClient`.
+- `api/`: endpoints, called through FastAPI's `TestClient`, with a temporary database and the fake model (the `client` and `fake_llm` fixtures).
 
 Rules:
 
@@ -224,6 +224,17 @@ To start again from an empty database, delete `backend/vault_heist.db` and run `
 Settings are defined in `backend/app/core/config.py` as a typed `Settings` class. Each field is read from the environment variable of the same name, or from the `.env` file at the repository root. Real environment variables win over `.env`. An invalid value stops the app at startup with a clear error.
 
 To add a setting: add a typed field with a default to `Settings`, add the variable to `.env.example`, and document it where it's used.
+
+## Playing through the API
+
+With `just dev` running (and `just migrate` done once), open http://localhost:8000/docs. Each endpoint has a **Try it out** button.
+
+1. **POST /api/sessions** → **Execute**. Copy the `session_id` from the response.
+2. **POST /api/levels/{level_id}/chat**: enter `1` as `level_id`, paste the session id into `X-Session-ID`, and set the body to `{"message": "Evening, Gus."}`. Execute, and Gus replies.
+3. **GET /api/levels/{level_id}** shows the whole conversation so far.
+4. **POST /api/levels/{level_id}/guess** with `{"guess": "..."}`. A correct guess returns `{"correct": true}`, and `GET /api/levels` then shows level 1 as cleared.
+
+The vault code is in the database (`SELECT secret_code FROM level_attempts ORDER BY id DESC LIMIT 1`) if you want to test the winning path.
 
 ## Talking to the guard in the terminal
 

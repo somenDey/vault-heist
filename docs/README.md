@@ -18,3 +18,4 @@
 - [0003 – Quality gates: pre-commit hooks and CI](decisions/0003-quality-gates.md)
 - [0004 – Structured output from the guard](decisions/0004-structured-output.md)
 - [0005 – Storing every interaction](decisions/0005-storage.md)
+- [0006 – API design](decisions/0006-api-design.md)
