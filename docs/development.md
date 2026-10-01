@@ -174,14 +174,26 @@ To add a setting: add a typed field with a default to `Settings`, add the variab
 
 ## Talking to the guard in the terminal
 
-`just chat` starts a conversation with Gus using the model in `LLM_MODEL`. Pass `--model` to try another without editing `.env`:
+`just chat` plays the game in the terminal, using the model in `LLM_MODEL`. Options:
 
 ```powershell
-just chat
-just chat --model ollama_chat/granite4.2:8b
+just chat                                      # start at level 1
+just chat --level 3                            # start at level 3
+just chat --model ollama_chat/granite4.2:8b    # try another model without editing .env
+just chat --reveal                             # developer cheat: print each vault code
 ```
 
-Each reply shows Gus's suspicion and a usage line: model, input/output tokens, cost and latency. Type `/reset` to start over and `/quit` to leave.
+Type to talk to Gus. Each reply shows his suspicion, a usage line (model, input/output tokens, cost and latency) and how many messages are left. Commands:
+
+| Command | Does |
+|---|---|
+| `/guess WORD` | Try a vault code |
+| `/level N` | Switch to level N |
+| `/levels` | List the levels |
+| `/reset` | Restart the level with a new code |
+| `/quit` | Leave |
+
+`--reveal` is useful for testing the Level 3 filter: knowing the code, you can push Gus to say it and watch the filter block it.
 
 ### Using a local model (Ollama)
 
@@ -197,7 +209,12 @@ An 8B model needs about 6 GB of GPU memory. If `ollama ps` shows part of it on t
 
 ## Adding a level
 
-_Added in Part 5._
+1. If the level needs new rules for Gus, add a prompt file in `backend/app/prompts/guard/`, e.g. `level_4.md`. It must contain `{vault_code}` where the code goes. Gus's persona is added in front of it automatically.
+2. Add a `Level(...)` entry to `LEVELS` in `backend/app/game/levels.py`: id, name, description, prompt file name, and whether the output filter applies.
+3. Run `just test`. `test_levels.py` checks that every level's prompt exists and has a place for the code.
+4. Update the levels tables in `docs/game-design.md` and `docs/how-to-play.md`.
+
+The engine needs no changes.
 
 ## Recording a decision
 

@@ -63,13 +63,14 @@ vault-heist/
 │   │   ├── main.py               # create_app(): the FastAPI app factory
 │   │   ├── core/                 # config (typed settings), logging (structlog)
 │   │   ├── api/                  # routes/ and schemas.py
-│   │   ├── game/                 # guard.py (reply format, prompt loading); levels, engine,
-│   │   │                         #   secrets, filters and word list planned for Part 5
+│   │   ├── game/                 # engine.py (rules), levels.py (levels as data), guard.py (reply
+│   │   │                         #   format, prompts), secrets.py + wordlist.txt (vault codes),
+│   │   │                         #   filters.py (Level 3 output filter)
 │   │   ├── llm/                  # client.py (LLMClient interface), litellm_client.py,
 │   │   │                         #   fake_client.py (tests), structured.py (validate/retry/fallback)
-│   │   ├── prompts/guard/        # persona.md (Gus); one prompt per level from Part 5
+│   │   ├── prompts/guard/        # persona.md (Gus), level_1.md, level_2.md
 │   │   └── db/                   # (planned, Part 6) models, session, repositories
-│   ├── scripts/chat_cli.py       # chat with the guard in the terminal
+│   ├── scripts/chat_cli.py       # play the game in the terminal
 │   └── tests/                    # unit/ and api/
 └── frontend/                     # (planned, Part 8)
     └── src/                      # api client, components, pages, styles
