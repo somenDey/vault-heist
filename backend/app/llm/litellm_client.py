@@ -38,6 +38,7 @@ class LiteLLMClient:
         timeout_seconds: float = 30.0,
     ) -> None:
         self._model = model
+        self._provider = litellm.get_llm_provider(model)[1]
         self._api_key = api_key
         self._api_base = api_base
         self._timeout_seconds = timeout_seconds
@@ -106,9 +107,15 @@ class LiteLLMClient:
             ),
         )
 
-    @staticmethod
-    def _cost_of(response: Any) -> float | None:
-        """Price the call from LiteLLM's price list; ``None`` if the model isn't listed."""
+    def _cost_of(self, response: Any) -> float | None:
+        """Price the call from LiteLLM's price list; ``None`` if the model isn't listed.
+
+        Local Ollama models are free, so they're priced at zero without asking
+        LiteLLM: its price lookup for Ollama queries the Ollama server, which
+        added about 2 seconds to every call.
+        """
+        if self._provider.startswith("ollama"):
+            return 0.0
         try:
             return float(litellm.completion_cost(completion_response=response))
         except Exception:  # Unknown model or missing usage: cost is simply unknown.
