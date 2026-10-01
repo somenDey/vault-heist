@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr | None = None
     ollama_api_base: str = "http://localhost:11434"
 
+    # ---- API ----
+    # Web pages allowed to call the API from a browser (the Vite dev server by default).
+    cors_origins: list[str] = ["http://localhost:5173"]
+
     # ---- Database ----
     # Defaults to a SQLite file in backend/, wherever the app is started from.
     database_url: str = f"sqlite:///{(REPO_ROOT / 'backend' / 'vault_heist.db').as_posix()}"

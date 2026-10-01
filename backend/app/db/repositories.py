@@ -6,12 +6,16 @@ link to the database: it opens a session per event and commits it.
 """
 
 from datetime import datetime, time
+from typing import cast
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, selectinload, sessionmaker
 
 from app.db.models import AttemptRecord, GuessRecord, MessageRecord, SessionRecord, utcnow
-from app.game.engine import Attempt, ChatTurn
+from app.game.engine import Attempt, ChatTurn, Outcome
+from app.game.guard import GuardReply
+from app.game.levels import get_level
+from app.llm.client import ChatMessage
 
 # ---- Repository functions ----
 
@@ -94,11 +98,64 @@ def count_player_messages_since(db: Session, session_id: str, since: datetime) -
     return db.scalar(query) or 0
 
 
+def get_current_attempt(db: Session, session_id: str, level_id: int) -> AttemptRecord | None:
+    """The session's unfinished attempt at a level, with its messages, or None."""
+    query = (
+        select(AttemptRecord)
+        .where(
+            AttemptRecord.session_id == session_id,
+            AttemptRecord.level_id == level_id,
+            AttemptRecord.outcome == "in_progress",
+        )
+        .order_by(AttemptRecord.id.desc())
+        .limit(1)
+        .options(selectinload(AttemptRecord.messages))
+    )
+    return db.scalars(query).first()
+
+
+def cleared_level_ids(db: Session, session_id: str) -> set[int]:
+    """The levels this session has won at least once."""
+    query = select(AttemptRecord.level_id).where(
+        AttemptRecord.session_id == session_id, AttemptRecord.outcome == "won"
+    )
+    return set(db.scalars(query))
+
+
+def to_attempt(record: AttemptRecord) -> Attempt:
+    """Rebuild the game's `Attempt` from its stored rows, so play can continue.
+
+    Gus's turns are put back in the JSON form the model saw them in.
+    """
+    history: list[ChatMessage] = []
+    suspicion = 0
+    for message in record.messages:
+        if message.role == "user":
+            history.append(ChatMessage("user", message.content))
+        else:
+            suspicion = message.suspicion or 0
+            shown = GuardReply(reply=message.content, suspicion=suspicion)
+            history.append(ChatMessage("assistant", shown.model_dump_json()))
+    return Attempt(
+        level=get_level(record.level_id),
+        vault_code=record.secret_code,
+        history=history,
+        suspicion=suspicion,
+        messages_sent=sum(1 for m in record.messages if m.role == "user"),
+        outcome=cast(Outcome, record.outcome),
+        id=record.id,
+    )
+
+
 # ---- The engine's link to the database ----
 
 
 class DatabaseRecorder:
-    """Stores every game event for one player session. Implements `GameRecorder`."""
+    """Stores every game event for one player session. Implements `GameRecorder`.
+
+    It also reads the session's state back, so a stateless caller (the API)
+    can pick up where the player left off.
+    """
 
     def __init__(self, session_factory: sessionmaker[Session], session_id: str) -> None:
         self._session_factory = session_factory
@@ -123,6 +180,17 @@ class DatabaseRecorder:
         """Store the attempt's outcome."""
         with self._session_factory.begin() as db:
             set_outcome(db, self._require_id(attempt), attempt.outcome)
+
+    def current_attempt(self, level_id: int) -> Attempt | None:
+        """The session's unfinished attempt at a level, or None if there isn't one."""
+        with self._session_factory() as db:
+            record = get_current_attempt(db, self.session_id, level_id)
+            return to_attempt(record) if record else None
+
+    def cleared_levels(self) -> set[int]:
+        """The levels this session has won."""
+        with self._session_factory() as db:
+            return cleared_level_ids(db, self.session_id)
 
     def messages_sent_today(self) -> int:
         """Messages this session has sent since midnight UTC."""

@@ -43,6 +43,37 @@ flowchart LR
 - **`complete_structured()`** asks for JSON matching a Pydantic model (the guard's `{reply, suspicion}`) and validates it. An invalid reply gets one retry, with the error shown to the model; a second failure returns a safe fallback. See [ADR 0004](decisions/0004-structured-output.md).
 - Any provider failure (network, bad key, timeout) is raised as a single `LLMError` type, so callers never handle provider-specific exceptions.
 
+## The HTTP API
+
+All endpoints are under `/api`. Interactive documentation is at `/docs` while the backend is running.
+
+| Method | Path | Does |
+|---|---|---|
+| GET | `/api/health` | Service is up, and which model is configured |
+| POST | `/api/sessions` | Start an anonymous player session; returns `session_id` |
+| GET | `/api/levels` | All levels, with whether this player has cleared each |
+| GET | `/api/levels/{level_id}` | One level and the player's attempt in progress (or `null`), with the conversation so far |
+| POST | `/api/levels/{level_id}/chat` | Send `{"message": ...}` to Gus; returns his reply, suspicion, `caught`, `blocked_by_filter`, `messages_left` |
+| POST | `/api/levels/{level_id}/guess` | Send `{"guess": ...}`; returns `{"correct": ...}` |
+| POST | `/api/levels/{level_id}/reset` | End the current attempt and start a new one with a new code |
+
+- **Sessions:** every endpoint except health and session creation needs the `X-Session-ID` header.
+- **Stateless:** each request loads the player's attempt from the database, so a page reload, or a different server, picks up where the player left off. Chatting or guessing with no attempt under way starts a new one; after being caught, the next message starts fresh.
+- **Thin routes:** a route finds the attempt, calls the game engine and converts the result. The rules all live in `app/game`.
+- **Errors** always look like `{"error": {"code": "...", "message": "..."}}`:
+
+| Status | `code` | When |
+|---|---|---|
+| 400 | `empty_message`, `message_too_long` | The message breaks a game rule |
+| 401 | `invalid_session` | `X-Session-ID` missing or unknown |
+| 404 | `unknown_level`, `not_found` | No such level, or no such URL |
+| 409 | `attempt_over` | Acting on an attempt that has already ended |
+| 422 | `invalid_request` | The body doesn't match the schema |
+| 429 | `message_limit_reached`, `daily_limit_reached` | A cost limit has been reached |
+| 503 | `guard_unavailable` | The model call failed (details are logged, not shown) |
+
+See [ADR 0006](decisions/0006-api-design.md) for the design choices.
+
 ## Storage
 
 ```mermaid
@@ -83,7 +114,8 @@ vault-heist/
 │   ├── app/
 │   │   ├── main.py               # create_app(): the FastAPI app factory
 │   │   ├── core/                 # config (typed settings), logging (structlog)
-│   │   ├── api/                  # routes/ and schemas.py
+│   │   ├── api/                  # routes/ (health, sessions, levels), schemas.py,
+│   │   │                         #   dependencies.py (per-request wiring), errors.py
 │   │   ├── game/                 # engine.py (rules), levels.py (levels as data), guard.py (reply
 │   │   │                         #   format, prompts), secrets.py + wordlist.txt (vault codes),
 │   │   │                         #   filters.py (Level 3 output filter)

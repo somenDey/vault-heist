@@ -44,10 +44,11 @@ From the `vault-heist` folder:
 
 ```bash
 just install
+just migrate
 just dev
 ```
 
-`just install` downloads everything the backend needs (the first time can take a minute). `just dev` starts it. You should see a line ending in `Uvicorn running on http://127.0.0.1:8000`.
+`just install` downloads everything the backend needs (the first time can take a minute). `just migrate` creates the game's database, a file at `backend/vault_heist.db`. `just dev` starts the backend. You should see a line ending in `Uvicorn running on http://127.0.0.1:8000`.
 
 Check it's working by opening http://localhost:8000/api/health in your browser. You should see something like:
 
@@ -59,4 +60,9 @@ To stop the backend, press `Ctrl+C` in the terminal.
 
 ## 4. Play
 
-_Coming soon, once the game and the website are built._
+Until the website is ready (Part 8), you can play in two ways:
+
+- **In the terminal:** `just chat`. Type to talk to Gus, and `/guess WORD` to try a code.
+- **In the browser, through the API page:** with `just dev` running, open http://localhost:8000/docs. See [development](development.md#playing-through-the-api) for a walkthrough.
+
+_The full browser game arrives with the website (Part 8)._
