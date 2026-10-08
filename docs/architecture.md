@@ -1,6 +1,6 @@
 # Architecture
 
-> Phase 1 target design. Parts not yet built are marked _(planned)_.
+> The Phase 1 design, as built.
 
 ## The big picture
 
@@ -74,6 +74,26 @@ All endpoints are under `/api`. Interactive documentation is at `/docs` while th
 
 See [ADR 0006](decisions/0006-api-design.md) for the design choices.
 
+## The frontend
+
+A single-page React app in `frontend/`, built with Vite. It has two pages: the vault list (`/`) and a level (`/levels/{level_id}`).
+
+```mermaid
+flowchart LR
+    Pages["Pages<br/>LevelSelect · LevelPlay"] --> Components["Components<br/>Chat, SuspicionMeter, VaultCodeInput,<br/>VaultDoor, GuardBadge, OutcomeDialog"]
+    Pages --> Client["api/client.ts<br/>the only code that calls fetch"]
+    Client -- "HTTP / JSON + X-Session-ID" --> API["Backend API"]
+```
+
+- **`api/client.ts`** is the single gateway to the backend, like `LLMClient` on the other side. On first use it creates an anonymous session and keeps its id in the browser's `localStorage`. If the server doesn't recognise the id (for example, after the database was reset), it creates a new session and retries once. Errors arrive as an `ApiError` carrying the API's error `code` and a message written for players.
+- **`api/types.ts`** mirrors the response models in `app/api/schemas.py`.
+- **Pages take the API as a prop**, so tests pass in a fake and need no server.
+- **The server is the source of truth.** A page shows what the API returns. After a reload, `GET /api/levels/{level_id}` brings back the conversation in progress.
+- **Your message appears straight away**, before Gus replies. If sending fails, it's removed again, so the screen always matches the database.
+- **Design tokens** (colours, fonts, easing) live in the `@theme` block of `src/styles/index.css`. The custom property `--heat` (suspicion from 0 to 1) drives the room's light and the gauge colour. See [ADR 0007](decisions/0007-frontend.md).
+
+The API address defaults to `http://localhost:8000`. To use another, set `VITE_API_URL` in `frontend/.env.local`, and add the page's address to the backend's `CORS_ORIGINS`.
+
 ## Storage
 
 ```mermaid
@@ -127,8 +147,16 @@ vault-heist/
 │   ├── alembic.ini, migrations/  # database migrations (Alembic)
 │   ├── scripts/chat_cli.py       # play the game in the terminal
 │   └── tests/                    # unit/ and api/
-└── frontend/                     # (planned, Part 8)
-    └── src/                      # api client, components, pages, styles
+└── frontend/
+    ├── package.json, package-lock.json, vite.config.ts
+    ├── index.html, public/       # the page shell and favicon
+    ├── src/
+    │   ├── main.tsx, App.tsx     # entry point and routes
+    │   ├── api/                  # client.ts (the only fetch calls), types.ts (API models)
+    │   ├── pages/                # LevelSelect.tsx, LevelPlay.tsx
+    │   ├── components/           # chat, suspicion gauge, code input, vault door, dialogs
+    │   └── styles/index.css      # Tailwind, fonts and design tokens
+    └── tests/                    # component and API-client tests (Vitest)
 ```
 
 ## Seams for later phases

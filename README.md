@@ -7,7 +7,7 @@
 
 Under the surface, it's a **security testbed for AI agents**: a hands-on way to explore prompt injection, guardrails, evaluation and observability. Every attempt is logged, and in later phases every attack that works becomes a test the defences must pass from then on.
 
-> **Status: Phase 1 in progress.** The game isn't playable yet. Follow along in the [roadmap](docs/roadmap.md).
+> **Status: Phase 1 in progress.** The game is playable on your own computer: see [getting started](docs/getting-started.md). Follow along in the [roadmap](docs/roadmap.md).
 
 ---
 

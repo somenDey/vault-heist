@@ -24,17 +24,17 @@ Vault Heist is built in seven phases. Each phase leaves a working, documented ga
 | 5 | Game logic | ✅ Done |
 | 6 | Database and logging | ✅ Done |
 | 7 | API endpoints | ✅ Done |
-| 8 | Frontend | ⏳ Next |
-| 9 | Playtest and learn | |
+| 8 | Frontend | ✅ Done |
+| 9 | Playtest and learn | ⏳ Next |
 | 10 | Documentation pass and `v0.1.0` release | |
 
 ## Phase 1 definition of done
 
 - [ ] Public GitHub repo with a clean structure, MIT license, and green CI badge
-- [ ] Three playable levels in the browser, with random per-session codes and a suspicion meter
+- [x] Three playable levels in the browser, with random per-session codes and a suspicion meter
 - [ ] Model switchable via `.env` (at least two providers tested)
 - [ ] Every interaction logged with tokens, cost and latency
-- [ ] Tests for the LLM layer (fake client), game logic, database and API; frontend component tests
+- [x] Tests for the LLM layer (fake client), game logic, database and API; frontend component tests
 - [ ] README, getting-started, how-to-play, game design, architecture, development, roadmap and playtest notes all written and accurate
 - [x] At least 2 ADRs
 - [ ] A fresh clone runs by following the docs alone
