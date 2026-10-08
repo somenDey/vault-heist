@@ -1,7 +1,5 @@
 # Getting started
 
-> **Work in progress.** The game can't be run yet. This page grows with each part of Phase 1, and by the end it will take you from nothing to playing in your browser.
-
 This guide assumes no programming experience. Every step says what to type and what you should see.
 
 ## What you'll need
@@ -38,7 +36,7 @@ Open `.env` in a text editor and paste your key after the matching `=` sign, for
 
 `.env` stays on your computer. It is never uploaded to GitHub.
 
-## 3. Install and start the backend
+## 3. Install and start the game
 
 From the `vault-heist` folder:
 
@@ -48,21 +46,23 @@ just migrate
 just dev
 ```
 
-`just install` downloads everything the backend needs (the first time can take a minute). `just migrate` creates the game's database, a file at `backend/vault_heist.db`. `just dev` starts the backend. You should see a line ending in `Uvicorn running on http://127.0.0.1:8000`.
+- `just install` downloads everything the game needs. The first time can take a few minutes.
+- `just migrate` creates the game's database, a file at `backend/vault_heist.db`. You only need it once (and again after pulling changes that add a migration).
+- `just dev` starts two things side by side: the **backend**, which talks to Gus (you'll see `Uvicorn running on http://127.0.0.1:8000`), and the **website** (you'll see `Local: http://localhost:5173/`).
 
-Check it's working by opening http://localhost:8000/api/health in your browser. You should see something like:
+To stop both, press `Ctrl+C` in the terminal.
+
+## 4. Play
+
+Open **http://localhost:5173** in your browser, choose a vault, and start talking to Gus. The rules are in [How to play](how-to-play.md).
+
+If the page says it can't reach the bank's server, check that the backend is still running in the terminal, and that http://localhost:8000/api/health shows something like:
 
 ```json
 {"status": "ok", "model": "anthropic/claude-haiku-4-5-20251001"}
 ```
 
-To stop the backend, press `Ctrl+C` in the terminal.
-
-## 4. Play
-
-Until the website is ready (Part 8), you can play in two ways:
+### Other ways to play
 
 - **In the terminal:** `just chat`. Type to talk to Gus, and `/guess WORD` to try a code.
-- **In the browser, through the API page:** with `just dev` running, open http://localhost:8000/docs. See [development](development.md#playing-through-the-api) for a walkthrough.
-
-_The full browser game arrives with the website (Part 8)._
+- **Through the API page:** with `just dev` running, open http://localhost:8000/docs. See [development](development.md#playing-through-the-api) for a walkthrough.

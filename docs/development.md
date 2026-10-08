@@ -68,9 +68,9 @@ Problems are caught in three places, each one earlier and cheaper than the next:
 
 | Where | What runs | When |
 |---|---|---|
-| Your editor | ruff and mypy (with the extensions) | As you type |
-| **pre-commit hooks** | File hygiene, secret scan, ruff, mypy | On every `git commit` |
-| **CI** (GitHub Actions) | `just check` (lint, types, tests) and a full-history secret scan | On every push to a PR and to `main` |
+| Your editor | ruff, mypy, oxlint, Prettier and TypeScript (with the extensions) | As you type |
+| **pre-commit hooks** | File hygiene, secret scan, ruff, mypy, oxlint, Prettier, TypeScript | On every `git commit` |
+| **CI** (GitHub Actions) | Backend and frontend checks, and a full-history secret scan | On every push to a PR and to `main` |
 
 ### pre-commit hooks
 
@@ -92,7 +92,10 @@ After that, every `git commit` runs the hooks in [`.pre-commit-config.yaml`](../
 - **no-commit-to-branch:** refuses commits made directly on `main`.
 - **File hygiene:** trailing whitespace, missing final newline, CRLF line endings, invalid YAML/TOML, leftover merge-conflict markers, files over 500 KB.
 - **gitleaks:** blocks the commit if it contains anything that looks like a secret (API keys, tokens, private keys).
-- **ruff check / ruff format / mypy:** the same checks as `just lint` and `just typecheck`, run through `uv` so they use the versions in `uv.lock`.
+- **ruff check / ruff format / mypy:** the same checks as `just lint-backend` and `just typecheck-backend`, run through `uv` so they use the versions in `uv.lock`.
+- **oxlint + Prettier / tsc:** the same checks as `just lint-frontend` and `just typecheck-frontend`, run through `npm` so they use the versions in `package-lock.json`. They need `just install` to have been run once.
+
+Hooks only run when matching files are staged: a backend-only commit skips the frontend checks, and the other way round.
 
 If a hook **fixes** something (whitespace, formatting), the commit stops so you can review the change. Run `git add` again and re-commit. If a hook **fails**, fix the problem and commit again.
 
@@ -107,12 +110,13 @@ Never skip hooks with `--no-verify`. If a hook is wrong, fix the hook.
 
 ### Continuous integration
 
-[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs two jobs on GitHub's Linux machines:
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs three jobs on GitHub's Linux machines, side by side:
 
-- **Backend:** installs uv and just, runs `just install` (which fails if `uv.lock` is out of date) and then `just check`.
+- **Backend:** installs uv and just, runs `just install-backend` (which fails if `uv.lock` is out of date) and then `just check-backend`.
+- **Frontend:** installs Node.js and just, runs `just install-frontend` (`npm ci`, which fails if `package-lock.json` is out of date) and then `just check-frontend`, which also makes a production build.
 - **Secret scan:** runs gitleaks over the full git history, so a secret committed without the local hook is still caught.
 
-Both are **required status checks** on `main`: a PR can't be merged until both pass. The badge at the top of the README shows the latest result on `main`.
+All three are **required status checks** on `main`: a PR can't be merged until they pass. The badge at the top of the README shows the latest result on `main`.
 
 ### If a secret is ever committed
 
@@ -126,15 +130,24 @@ Removing it in a later commit is **not** enough, because it stays in the git his
 
 All common actions run through [`just`](https://just.systems/) from the repository root (see [ADR 0002](decisions/0002-phase-1-tech-stack.md)). Run `just` on its own to list them.
 
+The everyday tasks cover the backend and the frontend together:
+
 | Command | Does |
 |---|---|
-| `just install` | Install backend dependencies exactly as locked in `uv.lock` |
-| `just dev` | Run the backend with auto-reload at http://localhost:8000 (API docs at `/docs`) |
+| `just install` | Install all dependencies exactly as locked (`uv.lock`, `package-lock.json`) |
+| `just dev` | Run the backend (http://localhost:8000, API docs at `/docs`) and the game (http://localhost:5173) side by side, both reloading on changes |
 | `just test` | Run all tests |
-| `just lint` | Check style and formatting with ruff (changes nothing) |
-| `just typecheck` | Check types with mypy (strict mode) |
-| `just format` | Auto-format and auto-fix what ruff can |
-| `just check` | Everything CI checks: lint, types and tests |
+| `just lint` | Check style and formatting (changes nothing) |
+| `just typecheck` | Check types: mypy (strict) and TypeScript |
+| `just format` | Auto-format and auto-fix what the tools can |
+| `just check` | Everything CI checks: lint, types, tests and a frontend build |
+
+Each one also has a backend-only and a frontend-only version: add `-backend` or `-frontend`, e.g. `just test-frontend` or `just dev-backend`. `just build-frontend` makes a production build in `frontend/dist`.
+
+Backend-only tasks:
+
+| Command | Does |
+|---|---|
 | `just migrate` | Bring the database up to date (creates it the first time) |
 | `just migration "message"` | Generate a new migration after changing `app/db/models.py` |
 | `just chat` | Play the game in the terminal |
@@ -154,6 +167,21 @@ Managed with `uv` from inside `backend/`. Never edit `uv.lock` by hand.
 
 Commit `pyproject.toml` and `uv.lock` together.
 
+## Frontend dependencies
+
+Managed with `npm` from inside `frontend/`. Never edit `package-lock.json` by hand.
+
+| Task | Command |
+|---|---|
+| Add a runtime package | `npm install <package>` |
+| Add a dev-only package | `npm install -D <package>` |
+| Remove a package | `npm uninstall <package>` |
+| Sync your environment after pulling | `npm ci` (or `just install`) |
+
+Commit `package.json` and `package-lock.json` together.
+
+On Windows PowerShell, use `npm.cmd` instead of `npm` for any command that passes options through with `--` (such as `npm create`). PowerShell's `npm` wrapper swallows the `--`.
+
 ## Testing
 
 Tests live in `backend/tests/`:
@@ -171,6 +199,14 @@ Rules:
 - `test_migrations.py` runs every migration on an empty database and then checks the result matches the models, so a model change without a migration fails CI.
 
 FastAPI's test client needs `httpx2` (the successor to `httpx` that Starlette now expects), installed as a dev dependency.
+
+### Frontend tests
+
+Frontend tests live in `frontend/tests/` and run with [Vitest](https://vitest.dev/) in a simulated browser (jsdom):
+
+- **Components** are rendered with [Testing Library](https://testing-library.com/) and driven like a player would: find things by their role, label or text, type, click, and check what's on screen. A test that can't find a button by its name usually means a screen reader can't either.
+- **Pages** get a fake API object, so no backend is needed.
+- **`client.test.ts`** checks the API client with a fake `fetch`: sessions, the `X-Session-ID` header, renewing an unknown session, and error handling.
 
 ## Database
 

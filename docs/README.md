@@ -19,3 +19,4 @@
 - [0004 – Structured output from the guard](decisions/0004-structured-output.md)
 - [0005 – Storing every interaction](decisions/0005-storage.md)
 - [0006 – API design](decisions/0006-api-design.md)
+- [0007 – Frontend tooling and design](decisions/0007-frontend.md)

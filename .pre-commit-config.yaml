@@ -3,9 +3,9 @@
 # Run on everything:       pre-commit run --all-files
 # https://pre-commit.com
 #
-# Python tools (ruff, mypy) run through uv, so they use exactly the versions
-# in backend/uv.lock and the settings in backend/pyproject.toml, the same as
-# `just check` and CI.
+# Python tools (ruff, mypy) run through uv, and frontend tools (oxlint,
+# Prettier, TypeScript) through npm, so each uses exactly the locked versions
+# and the project's own settings, the same as `just check` and CI.
 
 repos:
   # ---- General file hygiene ----
@@ -52,4 +52,18 @@ repos:
         entry: uv run --directory backend mypy
         language: unsupported
         files: ^backend/(.*\.py|pyproject\.toml)$
+        pass_filenames: false
+
+      # ---- Frontend: lint, format, types ----
+      - id: frontend-lint
+        name: oxlint + prettier (frontend)
+        entry: npm --prefix frontend run lint
+        language: unsupported
+        files: ^frontend/
+        pass_filenames: false
+      - id: frontend-typecheck
+        name: tsc (frontend)
+        entry: npm --prefix frontend run typecheck
+        language: unsupported
+        files: ^frontend/.*\.(ts|tsx|json)$
         pass_filenames: false
