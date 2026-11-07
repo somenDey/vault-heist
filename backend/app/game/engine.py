@@ -13,7 +13,13 @@ import structlog
 
 from app.core.config import Settings
 from app.game.filters import BLOCKED_REPLY, find_secret_leak
-from app.game.guard import MAX_SUSPICION, GuardReply, fallback_reply, render_system_prompt
+from app.game.guard import (
+    MAX_SUSPICION,
+    MAX_SUSPICION_RISE,
+    GuardReply,
+    fallback_reply,
+    render_system_prompt,
+)
 from app.game.levels import Level, get_level
 from app.game.secrets import generate_vault_code
 from app.llm.client import ChatMessage, LLMClient, LLMResponse
@@ -264,7 +270,11 @@ class GameEngine:
             logger.info("reply_blocked_by_filter", level=attempt.level.id, leak=leak)
             reply = BLOCKED_REPLY
 
-        attempt.suspicion = result.value.suspicion
+        attempt.suspicion = min(result.value.suspicion, attempt.suspicion + MAX_SUSPICION_RISE)
+        if attempt.suspicion < result.value.suspicion:
+            logger.info(
+                "suspicion_rise_capped", wanted=result.value.suspicion, given=attempt.suspicion
+            )
         attempt.messages_sent += 1
         # The model sees the conversation as the player saw it, including blocked replies.
         shown = GuardReply(reply=reply, suspicion=attempt.suspicion)

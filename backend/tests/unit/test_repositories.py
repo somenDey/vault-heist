@@ -127,6 +127,7 @@ async def test_the_outcome_is_stored(
 ) -> None:
     engine, _ = make_game(session_factory, reply("Security!", 10))
     attempt = engine.start_attempt(1)
+    attempt.suspicion = 9  # One step from calling security.
 
     if action == "win":
         engine.guess(attempt, CODE)

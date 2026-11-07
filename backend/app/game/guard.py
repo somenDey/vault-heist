@@ -7,6 +7,9 @@ from pydantic import BaseModel, Field
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts" / "guard"
 
 MAX_SUSPICION = 10
+# The most suspicion can rise in one reply, enforced in code whatever the model says.
+# Without it, one obvious trick took Gus from 0 to 8 (see docs/playtest-notes.md).
+MAX_SUSPICION_RISE = 3
 
 
 class GuardReply(BaseModel):

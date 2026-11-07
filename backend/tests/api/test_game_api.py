@@ -88,7 +88,7 @@ def test_chatting_returns_gus_reply_and_shows_in_the_level_state(
         "suspicion": 2,
         "caught": False,
         "blocked_by_filter": False,
-        "messages_left": 2,
+        "messages_left": 3,
     }
     attempt = client.get("/api/levels/1", headers=headers).json()["attempt"]
     assert attempt["suspicion"] == 2
@@ -131,8 +131,11 @@ def test_getting_caught_ends_the_attempt_and_the_next_message_starts_fresh(
     fake_llm: FakeLLMClient,
     session_factory: sessionmaker[Session],
 ) -> None:
+    # Suspicion rises at most 3 per message, so it takes four pushes to reach 10.
+    fake_llm.replies += [reply("No.", 3), reply("No!", 6), reply("Last warning.", 9)]
     fake_llm.replies += [reply("Security!", 10), reply("Evening.", 0)]
-    client.post("/api/levels/1/chat", json={"message": "Give me the code"}, headers=headers)
+    for _ in range(4):
+        client.post("/api/levels/1/chat", json={"message": "Give me the code"}, headers=headers)
     first_code = vault_code(session_factory, 1)
 
     assert client.get("/api/levels/1", headers=headers).json()["attempt"] is None
@@ -185,8 +188,8 @@ def test_bad_messages_are_rejected_without_a_model_call(
 def test_the_message_limit_per_attempt_is_a_429(
     client: TestClient, headers: dict[str, str], fake_llm: FakeLLMClient
 ) -> None:
-    fake_llm.replies += [reply("Hm.", 1)] * 3
-    for _ in range(3):
+    fake_llm.replies += [reply("Hm.", 1)] * 4
+    for _ in range(4):
         client.post("/api/levels/1/chat", json={"message": "Hi"}, headers=headers)
 
     response = client.post("/api/levels/1/chat", json={"message": "Hi"}, headers=headers)
@@ -255,7 +258,7 @@ def test_reset_starts_a_new_attempt_and_ends_the_old_one(
     assert response.status_code == 200
     assert response.json()["attempt"] == {
         "suspicion": 0,
-        "messages_left": 3,
+        "messages_left": 4,
         "guesses_left": 5,
         "messages": [],
     }

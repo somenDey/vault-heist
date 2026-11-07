@@ -33,7 +33,7 @@ def settings(tmp_path: Path) -> Settings:
         llm_model="fake/test-model",
         database_url=f"sqlite:///{(tmp_path / 'test.db').as_posix()}",
         max_message_chars=100,
-        max_messages_per_attempt=3,
+        max_messages_per_attempt=4,
     )
 
 
