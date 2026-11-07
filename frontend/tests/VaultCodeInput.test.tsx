@@ -6,7 +6,7 @@ import { VaultCodeInput } from '../src/components/VaultCodeInput'
 describe('VaultCodeInput', () => {
   it('submits the trimmed code', async () => {
     const onGuess = vi.fn()
-    render(<VaultCodeInput onGuess={onGuess} busy={false} wrongGuesses={0} />)
+    render(<VaultCodeInput onGuess={onGuess} busy={false} wrongGuesses={0} guessesLeft={5} />)
 
     await userEvent.type(screen.getByLabelText('Enter vault code'), ' lantern ')
     await userEvent.click(screen.getByRole('button', { name: 'Try code' }))
@@ -15,14 +15,15 @@ describe('VaultCodeInput', () => {
   })
 
   it('cannot submit an empty code', () => {
-    render(<VaultCodeInput onGuess={vi.fn()} busy={false} wrongGuesses={0} />)
+    render(<VaultCodeInput onGuess={vi.fn()} busy={false} wrongGuesses={0} guessesLeft={5} />)
 
     expect(screen.getByRole('button', { name: 'Try code' })).toBeDisabled()
   })
 
   it('says when a guess was wrong', () => {
-    render(<VaultCodeInput onGuess={vi.fn()} busy={false} wrongGuesses={1} />)
+    render(<VaultCodeInput onGuess={vi.fn()} busy={false} wrongGuesses={1} guessesLeft={4} />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Wrong code')
+    expect(screen.getByText('4 wrong guesses left')).toBeInTheDocument()
   })
 })

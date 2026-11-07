@@ -22,6 +22,8 @@ export interface ChatMessage {
 export interface AttemptState {
   suspicion: number
   messages_left: number
+  /** Wrong guesses left before Gus hears the dial and calls security. */
+  guesses_left: number
   messages: ChatMessage[]
 }
 
@@ -41,6 +43,9 @@ export interface ChatResponse {
 
 export interface GuessResponse {
   correct: boolean
+  /** That was the last wrong guess allowed: Gus called security. */
+  caught: boolean
+  guesses_left: number
 }
 
 export interface ErrorResponse {

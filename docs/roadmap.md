@@ -10,7 +10,7 @@ Vault Heist is built in seven phases. Each phase leaves a working, documented ga
 | 4 | The Red Team Lab | Attack library, automated attacker agent, evals in CI, false-refusal measurement | Planned |
 | 5 | Security Cameras | OpenTelemetry GenAI tracing, Langfuse, heist replay page, cost limits | Planned |
 | 6 | More Staff | Multi-agent, MCP server, Microsoft Agent Framework, A2A | Planned |
-| 7 | Launch | Docker, AWS deployment, auth, public leaderboard, write-up | Planned |
+| 7 | Launch | Docker, AWS deployment, auth, per-address rate limits, public leaderboard, write-up | Planned |
 
 ## Phase 1 progress
 

@@ -56,6 +56,8 @@ class Settings(BaseSettings):
     max_message_chars: int = Field(default=500, gt=0)
     max_messages_per_attempt: int = Field(default=30, gt=0)
     max_messages_per_session_per_day: int = Field(default=200, gt=0)
+    max_wrong_guesses_per_attempt: int = Field(default=5, gt=0)
+    max_wrong_guesses_per_session_per_day: int = Field(default=20, gt=0)
 
 
 @lru_cache

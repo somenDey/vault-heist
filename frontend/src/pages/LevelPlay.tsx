@@ -15,7 +15,8 @@ import { GuardBadge } from '../components/GuardBadge'
 const LAST_LEVEL = 3
 const MAX_MESSAGE_CHARS = 500
 
-type Outcome = 'playing' | 'caught' | 'won'
+/** How the attempt stands. Gus can catch you by suspicion or by too many wrong codes. */
+type Outcome = 'playing' | 'caught-talking' | 'caught-guessing' | 'won'
 
 /** What to tell the player when a request fails. API messages are written for players. */
 function errorMessage(err: unknown): string {
@@ -33,6 +34,7 @@ export function LevelPlay({ levelId, api }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [suspicion, setSuspicion] = useState(0)
   const [messagesLeft, setMessagesLeft] = useState<number | null>(null)
+  const [guessesLeft, setGuessesLeft] = useState<number | null>(null)
   const [outcome, setOutcome] = useState<Outcome>('playing')
   const [busy, setBusy] = useState(false)
   const [wrongGuesses, setWrongGuesses] = useState(0)
@@ -46,6 +48,7 @@ export function LevelPlay({ levelId, api }: Props) {
     setMessages(state.attempt?.messages ?? [])
     setSuspicion(state.attempt?.suspicion ?? 0)
     setMessagesLeft(state.attempt?.messages_left ?? null)
+    setGuessesLeft(state.attempt?.guesses_left ?? null)
     setOutcome('playing')
     setWrongGuesses(0)
     setError(null)
@@ -79,7 +82,7 @@ export function LevelPlay({ levelId, api }: Props) {
       ])
       setSuspicion(turn.suspicion)
       setMessagesLeft(turn.messages_left)
-      if (turn.caught) setOutcome('caught')
+      if (turn.caught) setOutcome('caught-talking')
     } catch (err) {
       setMessages((current) => current.slice(0, -1)) // The message wasn't delivered.
       showError(err)
@@ -93,7 +96,9 @@ export function LevelPlay({ levelId, api }: Props) {
     setBusy(true)
     try {
       const result = await api.guess(levelId, code)
+      setGuessesLeft(result.guesses_left)
       if (result.correct) setOutcome('won')
+      else if (result.caught) setOutcome('caught-guessing')
       else setWrongGuesses((count) => count + 1)
     } catch (err) {
       showError(err)
@@ -185,6 +190,7 @@ export function LevelPlay({ levelId, api }: Props) {
               <VaultCodeInput
                 busy={busy || outcome !== 'playing'}
                 wrongGuesses={wrongGuesses}
+                guessesLeft={guessesLeft}
                 onGuess={(code) => void guess(code)}
               />
             </div>
@@ -200,7 +206,7 @@ export function LevelPlay({ levelId, api }: Props) {
         </aside>
       </div>
 
-      {outcome === 'caught' && (
+      {(outcome === 'caught-talking' || outcome === 'caught-guessing') && (
         <OutcomeDialog
           tone="caught"
           title="Gus called security"
@@ -210,7 +216,10 @@ export function LevelPlay({ levelId, api }: Props) {
             </button>
           }
         >
-          His suspicion hit 10. The code has been changed and Gus won’t remember you.
+          {outcome === 'caught-talking'
+            ? 'His suspicion hit 10.'
+            : 'He heard someone trying code after code on the vault dial.'}{' '}
+          The code has been changed and Gus won’t remember you.
         </OutcomeDialog>
       )}
 

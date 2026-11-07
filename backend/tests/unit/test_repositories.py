@@ -10,7 +10,12 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.db import repositories as repo
 from app.db.models import AttemptRecord, GuessRecord, MessageRecord, utcnow
 from app.db.repositories import DatabaseRecorder
-from app.game.engine import DailyLimitReachedError, GameEngine, Limits
+from app.game.engine import (
+    DailyGuessLimitReachedError,
+    DailyLimitReachedError,
+    GameEngine,
+    Limits,
+)
 from app.llm.fake_client import FakeLLMClient
 
 pytestmark = pytest.mark.anyio
@@ -23,7 +28,10 @@ def reply(text: str, suspicion: int) -> str:
 
 
 def make_game(
-    session_factory: sessionmaker[Session], *replies: str, per_day: int = 200
+    session_factory: sessionmaker[Session],
+    *replies: str,
+    per_day: int = 200,
+    wrong_guesses_per_day: int = 20,
 ) -> tuple[GameEngine, DatabaseRecorder]:
     with session_factory.begin() as db:
         session_id = repo.create_session(db).id
@@ -31,7 +39,10 @@ def make_game(
     engine = GameEngine(
         FakeLLMClient(replies=list(replies)),
         limits=Limits(
-            max_message_chars=100, max_messages_per_attempt=30, max_messages_per_day=per_day
+            max_message_chars=100,
+            max_messages_per_attempt=30,
+            max_messages_per_day=per_day,
+            max_wrong_guesses_per_day=wrong_guesses_per_day,
         ),
         max_tokens=100,
         temperature=0.5,
@@ -142,6 +153,23 @@ def test_guesses_are_stored(session_factory: sessionmaker[Session]) -> None:
     assert [(g.guess, g.correct) for g in guesses] == [("candle", False), (CODE, True)]
 
 
+def test_wrong_guesses_are_counted_when_an_attempt_is_reloaded(
+    session_factory: sessionmaker[Session],
+) -> None:
+    engine, recorder = make_game(session_factory)
+    attempt = engine.start_attempt(1)
+    engine.guess(attempt, "candle")
+    engine.guess(attempt, CODE.upper())  # Ends the attempt, so make a fresh one below.
+    second = engine.start_attempt(1)
+    engine.guess(second, "candle")
+
+    reloaded = recorder.current_attempt(1)
+
+    assert reloaded is not None
+    assert reloaded.id == second.id
+    assert reloaded.wrong_guesses == 1
+
+
 async def test_the_daily_limit_counts_messages_across_attempts(
     session_factory: sessionmaker[Session],
 ) -> None:
@@ -175,6 +203,23 @@ async def test_the_daily_count_ignores_other_sessions_and_earlier_days(
 
     assert recorder.messages_sent_today() == 1
     assert other.messages_sent_today() == 1
+
+
+def test_the_daily_guess_limit_survives_starting_a_new_attempt(
+    session_factory: sessionmaker[Session],
+) -> None:
+    engine, recorder = make_game(session_factory, wrong_guesses_per_day=7)
+    first = engine.start_attempt(1)
+    for _ in range(5):
+        engine.guess(first, "candle")
+    assert first.outcome == "caught"
+    fresh = engine.start_attempt(1)
+    engine.guess(fresh, "candle")
+    engine.guess(fresh, "candle")
+
+    assert recorder.wrong_guesses_today() == 7
+    with pytest.raises(DailyGuessLimitReachedError):
+        engine.guess(fresh, CODE)
 
 
 def test_foreign_keys_are_enforced(session_factory: sessionmaker[Session]) -> None:

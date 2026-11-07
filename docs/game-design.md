@@ -20,12 +20,13 @@ Gus's personality lives in the level prompt files (`backend/app/prompts/guard/`)
 
 - **The vault code** is a single random word drawn from a word list (`backend/app/game/wordlist.txt`). A fresh code is generated for **every level attempt**, so every reset and every capture means a new code. It is never hard-coded, because this repository is public. Codes are picked with the operating system's secure random generator, so they can't be predicted from earlier ones. Words are at least 6 letters long and never appear in Gus's persona, so the Level 3 filter doesn't trip on ordinary talk.
 - **Chatting and guessing are separate.** The player talks to Gus in the chat, and types guesses into the **Enter vault code** box. Guesses are checked in code, case-insensitively. The model never sees them.
+- **Wrong guesses are limited.** Gus can't see the guesses, but he can hear the dial: the 5th wrong guess in an attempt gets the player caught, just like suspicion 10. A session can also make only 20 wrong guesses a day, across all attempts and levels. Without these limits, every word in the public word list could be tried in turn (see [playtest notes](playtest-notes.md), attack #21).
 - **The suspicion meter.** Every reply from Gus includes a suspicion score from 0 to 10, which the model returns as structured output:
   ```json
   { "reply": "Nice try, pal.", "suspicion": 4 }
   ```
-- **Getting caught.** When suspicion reaches 10, Gus calls security. The attempt ends as `caught`, and the level restarts with a new code and an empty conversation.
-- **Attempts.** Each try at a level is an *attempt*, with one code and one conversation. It ends as `won` (correct guess), `caught` (suspicion 10) or `reset` (the player restarts).
+- **Getting caught.** When suspicion reaches 10, or after too many wrong guesses, Gus calls security. The attempt ends as `caught`, and the level restarts with a new code and an empty conversation.
+- **Attempts.** Each try at a level is an *attempt*, with one code and one conversation. It ends as `won` (correct guess), `caught` (suspicion 10, or too many wrong guesses) or `reset` (the player restarts).
 - **Malformed replies.** If the model's output doesn't match the expected shape, we retry once, then fall back to a safe in-character reply.
 
 ## Levels
@@ -51,14 +52,18 @@ Levels are defined as data (`backend/app/game/levels.py`), so adding a level sho
 
 The gaps are tested too (`test_known_gaps_the_filter_does_not_catch`), so they are documented rather than forgotten. Closing them is Phase 3's job.
 
-## Cost protection
+## Limits
 
-API calls cost money, so these limits apply from day one. All are configurable in `.env`:
+API calls cost money, and the code list is public, so these limits apply from day one. All are configurable in `.env`:
 
 | Limit | Setting | Default |
 |---|---|---|
 | Maximum message length | `MAX_MESSAGE_CHARS` | 500 characters |
 | Messages per level attempt | `MAX_MESSAGES_PER_ATTEMPT` | 30 |
 | Messages per session per day | `MAX_MESSAGES_PER_SESSION_PER_DAY` | 200, counted from midnight UTC across all levels and attempts |
+| Wrong guesses per level attempt | `MAX_WRONG_GUESSES_PER_ATTEMPT` | 5; the last one gets the player caught |
+| Wrong guesses per session per day | `MAX_WRONG_GUESSES_PER_SESSION_PER_DAY` | 20, counted like the daily messages |
 
 A message that breaks a limit is refused before any model call, so it costs nothing.
+
+**Known gap:** the daily limits count per anonymous session, and anyone can start a new session. A script can still brute-force the code by switching sessions. Closing that needs limits per network address or per account, which come with deployment and accounts in Phase 7.

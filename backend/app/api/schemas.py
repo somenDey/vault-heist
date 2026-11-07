@@ -52,6 +52,7 @@ class AttemptState(BaseModel):
 
     suspicion: int
     messages_left: int
+    guesses_left: int = Field(description="Wrong guesses left before Gus calls security.")
     messages: list[MessageOut]
 
 
@@ -91,6 +92,11 @@ class GuessResponse(BaseModel):
     """Whether the guess was right. A right guess clears the level."""
 
     correct: bool
+    caught: bool = Field(
+        description="That was the last wrong guess allowed: Gus called security, and the "
+        "attempt is over."
+    )
+    guesses_left: int = Field(description="Wrong guesses left before Gus calls security.")
 
 
 # ---- Errors ----

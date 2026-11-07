@@ -34,6 +34,10 @@ CHAT_ERRORS: dict[int | str, dict[str, object]] = {
     429: {"model": ErrorResponse, "description": "Message limit reached (attempt or daily)"},
     503: {"model": ErrorResponse, "description": "The model is unavailable"},
 }
+GUESS_ERRORS: dict[int | str, dict[str, object]] = {
+    409: {"model": ErrorResponse, "description": "The attempt has already ended"},
+    429: {"model": ErrorResponse, "description": "Daily wrong-guess limit reached"},
+}
 
 router = APIRouter(prefix="/levels", tags=["levels"], responses=ERRORS)
 
@@ -69,13 +73,16 @@ async def chat(
     )
 
 
-@router.post("/{level_id}/guess")
+@router.post("/{level_id}/guess", responses=GUESS_ERRORS)
 def guess(
     level_id: int, body: GuessRequest, engine: GameEngineDep, recorder: RecorderDep
 ) -> GuessResponse:
-    """Try a vault code. A correct guess clears the level and ends the attempt."""
+    """Try a vault code. A correct guess clears the level; too many wrong ones get you caught."""
     attempt = current_or_new_attempt(level_id, engine, recorder)
-    return GuessResponse(correct=engine.guess(attempt, body.guess))
+    result = engine.guess(attempt, body.guess)
+    return GuessResponse(
+        correct=result.correct, caught=result.caught, guesses_left=engine.guesses_left(attempt)
+    )
 
 
 @router.post("/{level_id}/reset")
@@ -118,6 +125,7 @@ def level_state(
         attempt=AttemptState(
             suspicion=attempt.suspicion,
             messages_left=engine.messages_left(attempt),
+            guesses_left=engine.guesses_left(attempt),
             messages=[to_message_out(m.role, m.content) for m in attempt.history],
         ),
     )

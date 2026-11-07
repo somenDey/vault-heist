@@ -201,7 +201,7 @@ def test_the_message_limit_per_attempt_is_a_429(
 def test_a_wrong_guess_keeps_the_level_open(client: TestClient, headers: dict[str, str]) -> None:
     response = client.post("/api/levels/1/guess", json={"guess": "nope"}, headers=headers)
 
-    assert response.json() == {"correct": False}
+    assert response.json() == {"correct": False, "caught": False, "guesses_left": 4}
 
 
 def test_a_right_guess_clears_the_level(
@@ -212,9 +212,33 @@ def test_a_right_guess_clears_the_level(
 
     response = client.post("/api/levels/1/guess", json={"guess": code.upper()}, headers=headers)
 
-    assert response.json() == {"correct": True}
+    assert response.json() == {"correct": True, "caught": False, "guesses_left": 5}
     levels = client.get("/api/levels", headers=headers).json()
     assert [lv["cleared"] for lv in levels] == [True, False, False]
+
+
+def test_too_many_wrong_guesses_get_you_caught(client: TestClient, headers: dict[str, str]) -> None:
+    for _ in range(4):
+        client.post("/api/levels/1/guess", json={"guess": "nope"}, headers=headers)
+
+    last = client.post("/api/levels/1/guess", json={"guess": "nope"}, headers=headers)
+
+    assert last.json() == {"correct": False, "caught": True, "guesses_left": 0}
+    # The caught attempt is over: the next guess starts a fresh attempt with a new code.
+    after = client.post("/api/levels/1/guess", json={"guess": "nope"}, headers=headers)
+    assert after.json()["guesses_left"] == 4
+
+
+def test_starting_over_does_not_reset_the_daily_guess_limit(
+    client: TestClient, headers: dict[str, str]
+) -> None:
+    for _ in range(20):  # Four attempts, each caught on its fifth wrong guess.
+        client.post("/api/levels/3/guess", json={"guess": "nope"}, headers=headers)
+
+    response = client.post("/api/levels/3/guess", json={"guess": "nope"}, headers=headers)
+
+    assert response.status_code == 429
+    assert error_code(response.json()) == "daily_guess_limit_reached"
 
 
 def test_reset_starts_a_new_attempt_and_ends_the_old_one(
@@ -229,7 +253,12 @@ def test_reset_starts_a_new_attempt_and_ends_the_old_one(
     response = client.post("/api/levels/2/reset", headers=headers)
 
     assert response.status_code == 200
-    assert response.json()["attempt"] == {"suspicion": 0, "messages_left": 3, "messages": []}
+    assert response.json()["attempt"] == {
+        "suspicion": 0,
+        "messages_left": 3,
+        "guesses_left": 5,
+        "messages": [],
+    }
     with session_factory() as db:
         outcomes = db.scalars(select(AttemptRecord.outcome).order_by(AttemptRecord.id)).all()
     assert outcomes == ["reset", "in_progress"]

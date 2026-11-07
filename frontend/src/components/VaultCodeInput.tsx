@@ -7,9 +7,11 @@ interface Props {
   busy: boolean
   /** Bumped by the parent after a wrong guess, to shake the input. */
   wrongGuesses: number
+  /** Wrong guesses left in this attempt, or null before the attempt has started. */
+  guessesLeft: number | null
 }
 
-export function VaultCodeInput({ onGuess, busy, wrongGuesses }: Props) {
+export function VaultCodeInput({ onGuess, busy, wrongGuesses, guessesLeft }: Props) {
   const [code, setCode] = useState('')
 
   function submit(event: FormEvent) {
@@ -24,7 +26,10 @@ export function VaultCodeInput({ onGuess, busy, wrongGuesses }: Props) {
       <label htmlFor="vault-code" className="block font-stencil text-2xl font-bold text-chalk">
         Enter vault code
       </label>
-      <p className="mt-1 text-sm text-fog">One word. Gus never sees your guesses.</p>
+      <p className="mt-1 text-sm text-fog">
+        One word. Gus never sees your guesses, but he hears the dial: too many wrong codes and he
+        calls security.
+      </p>
       <div
         key={wrongGuesses}
         className={`mt-4 space-y-2 ${wrongGuesses > 0 ? 'animate-shake' : ''}`}
@@ -48,6 +53,11 @@ export function VaultCodeInput({ onGuess, busy, wrongGuesses }: Props) {
       {wrongGuesses > 0 && (
         <p role="status" className="mt-3 text-sm text-alarm">
           Wrong code. The vault stays shut.
+        </p>
+      )}
+      {guessesLeft !== null && (
+        <p className={`mt-2 text-sm ${guessesLeft <= 2 ? 'text-alarm' : 'text-fog'}`}>
+          {guessesLeft === 1 ? '1 wrong guess left' : `${guessesLeft} wrong guesses left`}
         </p>
       )}
     </form>

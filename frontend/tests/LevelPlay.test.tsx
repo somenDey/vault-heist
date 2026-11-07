@@ -26,7 +26,7 @@ function fakeApi() {
   return {
     getLevel: vi.fn().mockResolvedValue(emptyLevel),
     chat: vi.fn().mockResolvedValue(turn()),
-    guess: vi.fn().mockResolvedValue({ correct: false }),
+    guess: vi.fn().mockResolvedValue({ correct: false, caught: false, guesses_left: 4 }),
     reset: vi.fn().mockResolvedValue(emptyLevel),
   }
 }
@@ -64,6 +64,7 @@ describe('LevelPlay', () => {
       attempt: {
         suspicion: 5,
         messages_left: 12,
+        guesses_left: 5,
         messages: [{ role: 'guard', text: 'You again?', suspicion: 5 }],
       },
     })
@@ -87,9 +88,21 @@ describe('LevelPlay', () => {
     expect(screen.queryByText('Security!')).not.toBeInTheDocument()
   })
 
+  it('shows the caught moment after too many wrong guesses', async () => {
+    const api = fakeApi()
+    api.guess.mockResolvedValue({ correct: false, caught: true, guesses_left: 0 })
+    renderLevel(api)
+    await screen.findByRole('heading', { name: 'Level 1: Naive guard' })
+
+    await userEvent.type(screen.getByLabelText('Enter vault code'), 'lantern')
+    await userEvent.click(screen.getByRole('button', { name: 'Try code' }))
+
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('code after code')
+  })
+
   it('celebrates a correct guess', async () => {
     const api = fakeApi()
-    api.guess.mockResolvedValue({ correct: true })
+    api.guess.mockResolvedValue({ correct: true, caught: false, guesses_left: 5 })
     renderLevel(api)
     await screen.findByRole('heading', { name: 'Level 1: Naive guard' })
 
