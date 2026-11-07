@@ -19,7 +19,7 @@ If Gus's suspicion reaches **10**, or you make **5 wrong guesses**, he calls sec
 
 | Level | What you're up against |
 |---|---|
-| 1. Naive guard | Gus has been told not to share the code. That's all. |
+| 1. Naive guard | Gus has been told not to share the code, but he's tired, trusting and can't resist a word game. A good place to start. |
 | 2. Trained guard | Gus has been warned about common tricks. You'll need to be cleverer. |
 | 3. Guard with a filter | Even if Gus slips up, a filter blocks any reply containing the code. |
 

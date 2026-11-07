@@ -20,7 +20,7 @@ Under the surface, it's a **security testbed for AI agents**: a hands-on way to 
 
 | Level | Defence |
 |---|---|
-| 1. Naive guard | Told not to share the code. That's all. |
+| 1. Naive guard | Told not to share the code, but tired, trusting and fond of word games. |
 | 2. Trained guard | Trained to spot common tricks: role-play, spelling games, fake managers. |
 | 3. Guard with a filter | Level 2, plus a code filter that blocks any reply containing the code. |
 
