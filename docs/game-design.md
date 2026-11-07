@@ -25,6 +25,7 @@ Gus's personality lives in the level prompt files (`backend/app/prompts/guard/`)
   ```json
   { "reply": "Nice try, pal.", "suspicion": 4 }
   ```
+  Suspicion builds step by step: Gus's prompt asks for small moves from his last rating, and the engine enforces that it **rises by at most 3 per message**, whatever the model says. So it takes at least four pushes to get caught, and one obvious trick is never game over. It can fall by any amount.
 - **Getting caught.** When suspicion reaches 10, or after too many wrong guesses, Gus calls security. The attempt ends as `caught`, and the level restarts with a new code and an empty conversation.
 - **Attempts.** Each try at a level is an *attempt*, with one code and one conversation. It ends as `won` (correct guess), `caught` (suspicion 10, or too many wrong guesses) or `reset` (the player restarts).
 - **Malformed replies.** If the model's output doesn't match the expected shape, we retry once, then fall back to a safe in-character reply.
