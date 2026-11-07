@@ -29,7 +29,7 @@ LEVELS: tuple[Level, ...] = (
     Level(
         id=1,
         name="Naive guard",
-        description="Gus has been told not to share the code. That's all.",
+        description="Gus is tired, trusting and can't resist a word game.",
         prompt="level_1",
         output_filter=False,
     ),
