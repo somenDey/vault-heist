@@ -180,7 +180,7 @@ def test_a_correct_guess_wins(guess: str) -> None:
     engine, _ = make_engine()
     attempt = engine.start_attempt(1)
 
-    assert engine.guess(attempt, guess)
+    assert engine.guess(attempt, guess).correct
     assert attempt.outcome == "won"
 
 
@@ -188,8 +188,36 @@ def test_a_wrong_guess_keeps_the_attempt_going() -> None:
     engine, _ = make_engine()
     attempt = engine.start_attempt(1)
 
-    assert not engine.guess(attempt, "lanterns")
+    result = engine.guess(attempt, "lanterns")
+
+    assert (result.correct, result.caught) == (False, False)
     assert attempt.outcome == "in_progress"
+    assert engine.guesses_left(attempt) == 4
+
+
+def test_the_last_wrong_guess_allowed_gets_you_caught() -> None:
+    engine, _ = make_engine()
+    attempt = engine.start_attempt(1)
+    for _ in range(4):
+        engine.guess(attempt, "lanterns")
+
+    result = engine.guess(attempt, "lanterns")
+
+    assert (result.correct, result.caught) == (False, True)
+    assert attempt.outcome == "caught"
+    assert engine.guesses_left(attempt) == 0
+
+
+def test_a_right_guess_after_wrong_ones_still_wins() -> None:
+    engine, _ = make_engine()
+    attempt = engine.start_attempt(1)
+    for _ in range(4):
+        engine.guess(attempt, "lanterns")
+
+    result = engine.guess(attempt, CODE)
+
+    assert (result.correct, result.caught) == (True, False)
+    assert attempt.outcome == "won"
 
 
 def test_guessing_after_the_attempt_is_over_is_rejected() -> None:

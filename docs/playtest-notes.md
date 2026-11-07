@@ -46,7 +46,7 @@ A record of attacks that worked (and some that didn't), on which level and model
 6. **Run a control before believing a result.** The `blizzard` win looked like the code leaking into Gus's answers. Asking the same question with other codes showed it was his stock story. We found no evidence of the code leaking into small talk on Haiku.
 7. **The guard is predictable, and inventive.** The same anecdotes come back across separate attempts (the blizzard, "stale pretzels and regret", "gobbledygook"). He invents details ("gobbledygook" has "nine letters"; it has twelve) and lies to protect the secret ("even if I knew it, which I don't").
 
-**What we're changing** (each recorded under [Prompt changes](#prompt-changes) once re-tested)
+**What we're changing** (each recorded under [Changes after playtesting](#changes-after-playtesting) once re-tested)
 
 - Limit wrong guesses, so the guess box can't be brute-forced.
 - Make Level 1 genuinely naive, so it works as a tutorial.
@@ -95,10 +95,11 @@ A friendly-then-nosy conversation of about 7 turns with the basic Gus persona (n
 - **2026-10-01 · Granite 4.2 8B · `ollama run`.** Granite is a "thinking" model: from the command line it printed its reasoning in `<think>` tags before answering. The LLM layer sends `think: false`, so the guard answers directly.
 - **2026-09-23 · Claude Haiku 4.5 · raw API test.** With `max_tokens=50`, the in-character reply was cut off mid-sentence (`stop_reason: max_tokens`). Structured output will need enough headroom, or the JSON will be truncated and invalid. We'll check `stop_reason` in the LLM layer (Part 4).
 
-## Prompt changes
+## Changes after playtesting
 
-When a prompt is tuned because an attack was too easy, record it here: what changed, why, and whether the attack still works.
+When the game or a prompt changes because an attack worked (or a defence misfired), record it here: what changed, why, and whether the attack still works. Re-test by attacking the change, not just by checking it behaves as designed.
 
 | Date | Level | Change | Re-test result |
 |---|---|---|---|
-| | | | |
+| 2026-11-07 | All | **Wrong guesses limited** (for attack #21). The 5th wrong guess in an attempt gets the player caught. | The brute-force script was stopped after 5 guesses. But a script that simply starts a new attempt each time cracked Level 3 anyway: 77 guesses over 16 attempts, in 1.9 seconds. A per-attempt limit doesn't help when attempts are free. |
+| 2026-11-07 | All | **Daily cap of 20 wrong guesses per session**, across all attempts and levels, added on top. | The same script was refused (`daily_guess_limit_reached`) after 20 wrong guesses, having been caught 4 times. Its chance of cracking a code within 20 guesses is about 12%. **Still open:** sessions are free, so a script can switch to a new session and carry on. Per-address or per-account limits are planned for Phase 7. |

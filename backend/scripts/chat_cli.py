@@ -151,8 +151,14 @@ class TerminalGame:
         if not word:
             print(f"{RED}Usage: /guess WORD{RESET}\n")
             return
-        if not self._engine.guess(self.attempt, word):
-            print("✗ Wrong code. The vault stays shut.\n")
+        result = self._engine.guess(self.attempt, word)
+        if result.caught:
+            print(f"{RED}{BOLD}🚨 Gus heard the dial turning and calls security!{RESET}")
+            self.start_level(self.attempt.level.id)
+            return
+        if not result.correct:
+            left = self._engine.guesses_left(self.attempt)
+            print(f"✗ Wrong code. The vault stays shut. {DIM}{left} guesses left{RESET}\n")
             return
         level = self.attempt.level
         print(f"\n{GREEN}{BOLD}🔓 The vault swings open! Level {level.id} cleared.{RESET}")

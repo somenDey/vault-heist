@@ -48,6 +48,10 @@ class DailyLimitReachedError(GameError):
     """The player has used every message allowed for their session today."""
 
 
+class DailyGuessLimitReachedError(GameError):
+    """The player has made every wrong guess allowed for their session today."""
+
+
 @dataclass
 class Attempt:
     """One try at one level: a single vault code and a single conversation.
@@ -60,6 +64,7 @@ class Attempt:
     history: list[ChatMessage] = field(default_factory=list)
     suspicion: int = 0
     messages_sent: int = 0
+    wrong_guesses: int = 0
     outcome: Outcome = "in_progress"
     id: int | None = None  # Set by the recorder, e.g. the database row id.
 
@@ -94,12 +99,30 @@ class ChatTurn:
 
 
 @dataclass(frozen=True)
+class GuessResult:
+    """The result of one guess at the vault code.
+
+    Attributes:
+        correct: The guess was right: the vault opens and the attempt is won.
+        caught: The guess was the last wrong one allowed: Gus heard the dial and called
+            security, so the attempt is over.
+    """
+
+    correct: bool
+    caught: bool
+
+
+@dataclass(frozen=True)
 class Limits:
-    """Cost-protection limits."""
+    """Limits that keep the game fair and its costs down."""
 
     max_message_chars: int
     max_messages_per_attempt: int
     max_messages_per_day: int = 200  # Per player session; needs a recorder that counts.
+    # Without these, every code in the public word list could be tried in turn. The daily
+    # limit stops a script from starting a fresh attempt each time it gets caught.
+    max_wrong_guesses: int = 5
+    max_wrong_guesses_per_day: int = 20  # Per player session; needs a recorder that counts.
 
 
 class GameRecorder(Protocol):
@@ -125,6 +148,10 @@ class GameRecorder(Protocol):
         """How many messages this player session has sent today (UTC)."""
         ...
 
+    def wrong_guesses_today(self) -> int:
+        """How many wrong guesses this player session has made today (UTC)."""
+        ...
+
 
 class NullRecorder:
     """A recorder that keeps nothing. Without storage, the daily limit can't be counted."""
@@ -143,6 +170,10 @@ class NullRecorder:
         """Do nothing."""
 
     def messages_sent_today(self) -> int:
+        """Always zero."""
+        return 0
+
+    def wrong_guesses_today(self) -> int:
         """Always zero."""
         return 0
 
@@ -178,6 +209,8 @@ class GameEngine:
                 max_message_chars=settings.max_message_chars,
                 max_messages_per_attempt=settings.max_messages_per_attempt,
                 max_messages_per_day=settings.max_messages_per_session_per_day,
+                max_wrong_guesses=settings.max_wrong_guesses_per_attempt,
+                max_wrong_guesses_per_day=settings.max_wrong_guesses_per_session_per_day,
             ),
             max_tokens=settings.llm_max_tokens,
             temperature=settings.llm_temperature,
@@ -197,6 +230,10 @@ class GameEngine:
     def messages_left(self, attempt: Attempt) -> int:
         """How many more messages the player may send in this attempt."""
         return max(self._limits.max_messages_per_attempt - attempt.messages_sent, 0)
+
+    def guesses_left(self, attempt: Attempt) -> int:
+        """How many more wrong guesses the player can make before Gus calls security."""
+        return max(self._limits.max_wrong_guesses - attempt.wrong_guesses, 0)
 
     async def send_message(self, attempt: Attempt, text: str) -> ChatTurn:
         """Send the player's message to Gus and apply the game rules to his reply.
@@ -251,21 +288,35 @@ class GameEngine:
             self._recorder.attempt_ended(attempt)
         return turn
 
-    def guess(self, attempt: Attempt, guess: str) -> bool:
-        """Check a guess at the vault code. A correct guess wins the attempt.
+    def guess(self, attempt: Attempt, guess: str) -> GuessResult:
+        """Check a guess at the vault code.
 
-        Guesses ignore case and surrounding spaces. The model never sees them.
+        A correct guess wins the attempt. Each wrong guess counts towards the limit, and
+        the last one allowed ends the attempt as caught: Gus hears someone working the
+        dial and calls security. Guesses ignore case and surrounding spaces. The model
+        never sees them.
 
         Raises:
             AttemptOverError: If the attempt has already ended.
+            DailyGuessLimitReachedError: If the session has used today's wrong guesses.
         """
         self._check_not_over(attempt)
+        if self._recorder.wrong_guesses_today() >= self._limits.max_wrong_guesses_per_day:
+            raise DailyGuessLimitReachedError(
+                f"You've made {self._limits.max_wrong_guesses_per_day} wrong guesses today. "
+                "The bank has changed the locks for the night; come back tomorrow."
+            )
         correct = guess.strip().lower() == attempt.vault_code.lower()
         self._recorder.guess_made(attempt, guess.strip(), correct)
         if correct:
             attempt.outcome = "won"
+        else:
+            attempt.wrong_guesses += 1
+            if self.guesses_left(attempt) == 0:
+                attempt.outcome = "caught"
+        if attempt.is_over:
             self._recorder.attempt_ended(attempt)
-        return correct
+        return GuessResult(correct=correct, caught=attempt.outcome == "caught")
 
     def abandon(self, attempt: Attempt) -> None:
         """End an attempt because the player chose to reset the level."""

@@ -36,7 +36,7 @@ Full rules: [Game design](docs/game-design.md) · [How to play](docs/how-to-play
 | 4 | The Red Team Lab | Attack library, automated attacker agent, evals in CI | Planned |
 | 5 | Security Cameras | OpenTelemetry tracing, Langfuse, heist replay, cost limits | Planned |
 | 6 | More Staff | Multi-agent, MCP server, Microsoft Agent Framework, A2A | Planned |
-| 7 | Launch | Docker, AWS deployment, auth, public leaderboard | Planned |
+| 7 | Launch | Docker, AWS deployment, auth, rate limits, public leaderboard | Planned |
 
 Details: [docs/roadmap.md](docs/roadmap.md)
 

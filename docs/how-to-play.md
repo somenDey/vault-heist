@@ -8,12 +8,12 @@ Get into the vault. To do that you need the **vault code**, a single word. The o
 
 1. **Chat with Gus.** Type anything you like. Be friendly, be sneaky, be creative.
 2. **Watch his suspicion meter.** Every reply comes with a score from 0 to 10 showing how suspicious he is of you.
-3. **Enter the code.** When you think you know it, type it into the **Enter vault code** box. Guessing is separate from chatting, so Gus doesn't see your guesses.
+3. **Enter the code.** When you think you know it, type it into the **Enter vault code** box. Guessing is separate from chatting, so Gus doesn't see your guesses, but he hears the dial. You get **5 wrong guesses** per attempt.
 4. **Get it right** and the level is cleared.
 
 ## Getting caught
 
-If Gus's suspicion reaches **10**, he calls security. The level resets: a **new** code, and Gus forgets your conversation. Anything you learned about the old code is useless.
+If Gus's suspicion reaches **10**, or you make **5 wrong guesses**, he calls security. The level resets: a **new** code, and Gus forgets your conversation. Anything you learned about the old code is useless.
 
 ## The levels
 
@@ -25,7 +25,7 @@ If Gus's suspicion reaches **10**, he calls security. The level resets: a **new*
 
 ## Limits
 
-To keep costs fair, there's a maximum message length, a maximum number of messages per level attempt, and a daily limit per player. You'll see a clear message if you hit one.
+To keep costs fair, there's a maximum message length, a maximum number of messages per level attempt, a daily limit on messages, and a daily limit of 20 wrong guesses. You'll see a clear message if you hit one.
 
 ## Tips
 

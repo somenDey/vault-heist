@@ -54,7 +54,7 @@ All endpoints are under `/api`. Interactive documentation is at `/docs` while th
 | GET | `/api/levels` | All levels, with whether this player has cleared each |
 | GET | `/api/levels/{level_id}` | One level and the player's attempt in progress (or `null`), with the conversation so far |
 | POST | `/api/levels/{level_id}/chat` | Send `{"message": ...}` to Gus; returns his reply, suspicion, `caught`, `blocked_by_filter`, `messages_left` |
-| POST | `/api/levels/{level_id}/guess` | Send `{"guess": ...}`; returns `{"correct": ...}` |
+| POST | `/api/levels/{level_id}/guess` | Send `{"guess": ...}`; returns `correct`, `caught` and `guesses_left` |
 | POST | `/api/levels/{level_id}/reset` | End the current attempt and start a new one with a new code |
 
 - **Sessions:** every endpoint except health and session creation needs the `X-Session-ID` header.
@@ -69,7 +69,7 @@ All endpoints are under `/api`. Interactive documentation is at `/docs` while th
 | 404 | `unknown_level`, `not_found` | No such level, or no such URL |
 | 409 | `attempt_over` | Acting on an attempt that has already ended |
 | 422 | `invalid_request` | The body doesn't match the schema |
-| 429 | `message_limit_reached`, `daily_limit_reached` | A cost limit has been reached |
+| 429 | `message_limit_reached`, `daily_limit_reached`, `daily_guess_limit_reached` | A message or guess limit has been reached |
 | 503 | `guard_unavailable` | The model call failed (details are logged, not shown) |
 
 See [ADR 0006](decisions/0006-api-design.md) for the design choices.

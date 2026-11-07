@@ -14,6 +14,7 @@ from app.api.dependencies import InvalidSessionError
 from app.api.schemas import ErrorDetail, ErrorResponse
 from app.game.engine import (
     AttemptOverError,
+    DailyGuessLimitReachedError,
     DailyLimitReachedError,
     EmptyMessageError,
     GameError,
@@ -32,6 +33,10 @@ GAME_ERRORS: dict[type[GameError], tuple[int, str]] = {
     AttemptOverError: (status.HTTP_409_CONFLICT, "attempt_over"),
     MessageLimitReachedError: (status.HTTP_429_TOO_MANY_REQUESTS, "message_limit_reached"),
     DailyLimitReachedError: (status.HTTP_429_TOO_MANY_REQUESTS, "daily_limit_reached"),
+    DailyGuessLimitReachedError: (
+        status.HTTP_429_TOO_MANY_REQUESTS,
+        "daily_guess_limit_reached",
+    ),
 }
 
 

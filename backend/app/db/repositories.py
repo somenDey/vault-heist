@@ -98,6 +98,20 @@ def count_player_messages_since(db: Session, session_id: str, since: datetime) -
     return db.scalar(query) or 0
 
 
+def count_wrong_guesses_since(db: Session, session_id: str, since: datetime) -> int:
+    """Count the wrong guesses a player session has made since ``since`` (UTC)."""
+    query = (
+        select(func.count(GuessRecord.id))
+        .join(AttemptRecord, GuessRecord.attempt_id == AttemptRecord.id)
+        .where(
+            AttemptRecord.session_id == session_id,
+            GuessRecord.correct.is_(False),
+            GuessRecord.created_at >= since,
+        )
+    )
+    return db.scalar(query) or 0
+
+
 def get_current_attempt(db: Session, session_id: str, level_id: int) -> AttemptRecord | None:
     """The session's unfinished attempt at a level, with its messages, or None."""
     query = (
@@ -142,6 +156,7 @@ def to_attempt(record: AttemptRecord) -> Attempt:
         history=history,
         suspicion=suspicion,
         messages_sent=sum(1 for m in record.messages if m.role == "user"),
+        wrong_guesses=sum(1 for g in record.guesses if not g.correct),
         outcome=cast(Outcome, record.outcome),
         id=record.id,
     )
@@ -197,6 +212,12 @@ class DatabaseRecorder:
         midnight = datetime.combine(utcnow().date(), time.min)
         with self._session_factory() as db:
             return count_player_messages_since(db, self.session_id, midnight)
+
+    def wrong_guesses_today(self) -> int:
+        """Wrong guesses this session has made since midnight UTC."""
+        midnight = datetime.combine(utcnow().date(), time.min)
+        with self._session_factory() as db:
+            return count_wrong_guesses_since(db, self.session_id, midnight)
 
     @staticmethod
     def _require_id(attempt: Attempt) -> int:
