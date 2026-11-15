@@ -34,12 +34,14 @@ flowchart LR
     Structured --> Interface["LLMClient (interface)"]
     Interface -.-> Real["LiteLLMClient"]
     Interface -.-> Fake["FakeLLMClient<br/>(tests)"]
+    Interface -.-> Demo["DemoLLMClient<br/>(demo/gus: no key, no cost)"]
     Real --> Providers[("Anthropic · OpenAI · Gemini · Ollama")]
 ```
 
 - **`LLMClient`** is a small interface: give it messages, get back an `LLMResponse` with the text, why generation stopped, and usage (input/output tokens, cost in USD, latency in ms).
 - **`LiteLLMClient`** implements it for any provider. The model is chosen by `LLM_MODEL` in `.env`, and the matching API key is passed explicitly.
 - **`FakeLLMClient`** returns scripted replies, so tests need no network and cost nothing.
+- **`DemoLLMClient`** is a rule-based stand-in for Gus, chosen with `LLM_MODEL=demo/gus`, for screenshots and for trying the game without an API key. `create_llm_client()` in `llm/factory.py` picks the right client from the settings.
 - **`complete_structured()`** asks for JSON matching a Pydantic model (the guard's `{reply, suspicion}`) and validates it. An invalid reply gets one retry, with the error shown to the model; a second failure returns a safe fallback. See [ADR 0004](decisions/0004-structured-output.md).
 - Any provider failure (network, bad key, timeout) is raised as a single `LLMError` type, so callers never handle provider-specific exceptions.
 
@@ -128,7 +130,7 @@ Usage columns are filled in for Gus's replies only. When a reply needed a retry,
 vault-heist/
 ├── README.md, LICENSE, justfile, .env.example, ...
 ├── .github/workflows/ci.yml      # CI: lint, types, tests, secret scan
-├── docs/                         # You are here
+├── docs/                         # You are here; images/ holds the README screenshots
 ├── backend/
 │   ├── pyproject.toml, uv.lock   # dependencies and tool settings
 │   ├── app/
@@ -140,7 +142,8 @@ vault-heist/
 │   │   │                         #   format, prompts), secrets.py + wordlist.txt (vault codes),
 │   │   │                         #   filters.py (Level 3 output filter)
 │   │   ├── llm/                  # client.py (LLMClient interface), litellm_client.py,
-│   │   │                         #   fake_client.py (tests), structured.py (validate/retry/fallback)
+│   │   │                         #   fake_client.py (tests), demo_client.py (demo/gus),
+│   │   │                         #   factory.py (picks one), structured.py (validate/retry/fallback)
 │   │   ├── prompts/guard/        # persona.md (Gus), level_1.md, level_2.md
 │   │   └── db/                   # models.py (tables), session.py (connections),
 │   │                             #   repositories.py (queries + DatabaseRecorder)
@@ -156,6 +159,7 @@ vault-heist/
     │   ├── pages/                # LevelSelect.tsx, LevelPlay.tsx
     │   ├── components/           # chat, suspicion gauge, code input, vault door, dialogs
     │   └── styles/index.css      # Tailwind, fonts and design tokens
+    ├── scripts/screenshots.ts    # makes the README images in docs/images/ (Playwright)
     └── tests/                    # component and API-client tests (Vitest)
 ```
 
