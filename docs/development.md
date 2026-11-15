@@ -199,7 +199,7 @@ Tests live in `backend/tests/`:
 Rules:
 
 - **Tests never read your `.env`.** The `settings` fixture in `conftest.py` builds settings with `_env_file=None`, so tests behave the same on every machine and in CI.
-- **Tests never call a real LLM.** From Part 4, tests use a fake LLM client: no network, no cost.
+- **Tests never call a real LLM.** They use `FakeLLMClient`, which returns scripted replies: no network, no cost.
 - Name tests after the behaviour they check, e.g. `test_invalid_value_fails_at_startup`.
 
 - **Tests never use the real database.** The `session_factory` fixture gives each test its own empty SQLite file in a temporary folder.
@@ -336,6 +336,21 @@ The demo Gus (`backend/app/llm/demo_client.py`) follows three rules: a crossword
 4. Update the levels tables in `docs/game-design.md` and `docs/how-to-play.md`.
 
 The engine needs no changes.
+
+## Releasing a version
+
+Versions follow [semantic versioning](https://semver.org/): `0.x` while the project is young, with the minor number going up at the end of each phase. Every release is recorded in [`CHANGELOG.md`](../CHANGELOG.md).
+
+1. On a release branch, move the changelog's **Unreleased** notes under the new version and date, and set the version in `backend/pyproject.toml` and in `frontend/` (`npm version 0.2.0 --no-git-tag-version`, which updates `package.json` and `package-lock.json` together).
+2. Merge the release PR as usual.
+3. Tag the merged commit on `main` and publish the GitHub release, with that version's changelog section as the notes:
+   ```powershell
+   git switch main
+   git pull
+   git tag -a v0.2.0 -m "v0.2.0"
+   git push origin v0.2.0
+   gh release create v0.2.0 --title "v0.2.0" --notes-file release-notes.md
+   ```
 
 ## Recording a decision
 

@@ -10,7 +10,7 @@ This guide assumes no programming experience. Every step says what to type and w
 | [uv](https://docs.astral.sh/uv/) | Installs Python and the backend's packages |
 | [Node.js](https://nodejs.org/) (LTS version) | Runs the website part of the game |
 | [just](https://just.systems/) | Runs project commands with one short word, e.g. `just dev` |
-| An API key from an AI provider | Lets the guard think. Anthropic, OpenAI or Google Gemini all work. You can also use a free local model with [Ollama](https://ollama.com/). |
+| An API key from an AI provider (optional) | Lets the guard think. Anthropic, OpenAI or Google Gemini all work. You can also use a free local model with [Ollama](https://ollama.com/), or try the game with no key at all using `just demo` (see [Other ways to play](#other-ways-to-play)). |
 
 The AI provider charges a small amount per message. The game has built-in limits so a session can't run up a large bill.
 
@@ -65,6 +65,5 @@ If the page says it can't reach the bank's server, check that the backend is sti
 ### Other ways to play
 
 - **Without an API key:** `just demo` runs the game with a stand-in for Gus that follows a few fixed rules. It costs nothing and is easy to beat (hint: he loves crosswords), so it's for trying the game out, not for real attacks. It uses its own database, `backend/demo.db`.
-
 - **In the terminal:** `just chat`. Type to talk to Gus, and `/guess WORD` to try a code.
 - **Through the API page:** with `just dev` running, open http://localhost:8000/docs. See [development](development.md#playing-through-the-api) for a walkthrough.

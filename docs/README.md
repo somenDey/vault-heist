@@ -10,6 +10,7 @@
 | [Roadmap](roadmap.md) | The seven phases and where we are now | Everyone |
 | [Playtest notes](playtest-notes.md) | Attacks that worked, and what we learned | Everyone |
 | [Decisions](decisions/) | Why the project is built the way it is (ADRs) | Developers |
+| [Changelog](../CHANGELOG.md) | What changed in each release | Everyone |
 
 ## Architecture decision records
 
