@@ -64,5 +64,7 @@ If the page says it can't reach the bank's server, check that the backend is sti
 
 ### Other ways to play
 
+- **Without an API key:** `just demo` runs the game with a stand-in for Gus that follows a few fixed rules. It costs nothing and is easy to beat (hint: he loves crosswords), so it's for trying the game out, not for real attacks. It uses its own database, `backend/demo.db`.
+
 - **In the terminal:** `just chat`. Type to talk to Gus, and `/guess WORD` to try a code.
 - **Through the API page:** with `just dev` running, open http://localhost:8000/docs. See [development](development.md#playing-through-the-api) for a walkthrough.

@@ -13,7 +13,7 @@ from app.core.config import Settings, get_settings
 from app.db.repositories import DatabaseRecorder, get_session
 from app.game.engine import GameEngine
 from app.llm.client import LLMClient
-from app.llm.litellm_client import LiteLLMClient
+from app.llm.factory import create_llm_client
 
 SESSION_HEADER = "X-Session-ID"
 
@@ -38,7 +38,7 @@ def get_llm_client(request: Request, settings: SettingsDep) -> LLMClient:
     """The model client, created on first use and then shared by all requests."""
     client: LLMClient | None = getattr(request.app.state, "llm_client", None)
     if client is None:
-        client = LiteLLMClient.from_settings(settings)
+        client = create_llm_client(settings)
         request.app.state.llm_client = client
     return client
 

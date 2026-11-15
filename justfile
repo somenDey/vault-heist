@@ -144,3 +144,23 @@ build-frontend:
 # Frontend lint, types, tests and a production build
 [group('frontend')]
 check-frontend: lint-frontend typecheck-frontend test-frontend build-frontend
+
+# ---- Demo and screenshots ----
+
+# Run the game with the rule-based demo Gus: no API key, no cost, its own database
+[group('demo')]
+[parallel]
+demo: demo-backend dev-frontend
+
+# Run the backend on the demo Gus (LLM_MODEL=demo/gus) with backend/demo.db
+[group('demo')]
+[working-directory: 'backend']
+demo-backend $LLM_MODEL="demo/gus" $DATABASE_URL="sqlite:///demo.db":
+    uv run alembic upgrade head
+    uv run uvicorn app.main:create_app --factory --port 8000
+
+# Save the README screenshots to docs/images (needs `just demo` running)
+[group('demo')]
+[working-directory: 'frontend']
+screenshots:
+    npm run screenshots

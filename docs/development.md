@@ -152,6 +152,13 @@ Backend-only tasks:
 | `just migration "message"` | Generate a new migration after changing `app/db/models.py` |
 | `just chat` | Play the game in the terminal |
 
+Demo and screenshots:
+
+| Command | Does |
+|---|---|
+| `just demo` | Run the game with the rule-based demo Gus (`LLM_MODEL=demo/gus`) and its own database, `backend/demo.db` |
+| `just screenshots` | With `just demo` running, play the game in a browser and save the README images to `docs/images/` |
+
 Run `just check` before every commit.
 
 ## Backend dependencies
@@ -306,6 +313,20 @@ ollama ps          # after first use: PROCESSOR should say 100% GPU
 ```
 
 An 8B model needs about 6 GB of GPU memory. If `ollama ps` shows part of it on the CPU, replies will be much slower.
+
+## Screenshots
+
+The images in `docs/images/` are made by a script, `frontend/scripts/screenshots.ts`, so they can be remade whenever the UI changes:
+
+```powershell
+npx --prefix frontend playwright install chromium   # once per machine: downloads the browser
+just demo                                           # terminal 1
+just screenshots                                    # terminal 2
+```
+
+The script uses [Playwright](https://playwright.dev/) to play a short scripted game: the start screen, a conversation, a win, a Level 3 filter block, getting caught, and a phone-sized view. It plays against the **demo Gus**, not a real model, so it's free, needs no API key, and makes the same pictures every run. It turns on the browser's reduced-motion setting and waits for every animation to finish, so no picture catches a message halfway through appearing. Images are saved as JPEG to stay under the 500 KB file limit.
+
+The demo Gus (`backend/app/llm/demo_client.py`) follows three rules: a crossword clue makes him name the code, asking about the code raises his suspicion by 3, and anything else gets small talk. Don't use it for playtesting: it says nothing about how a real model behaves.
 
 ## Adding a level
 

@@ -9,6 +9,12 @@ Under the surface, it's a **security testbed for AI agents**: a hands-on way to 
 
 > **Status: Phase 1 in progress.** The game is playable on your own computer: see [getting started](docs/getting-started.md). Follow along in the [roadmap](docs/roadmap.md).
 
+![The Vault Heist start screen: a gold stencil title beside a steel vault door](docs/images/home.jpg)
+
+| Talking to Gus | The Level 3 filter at work | Cracking the vault |
+|---|---|---|
+| ![Gus's suspicion gauge reading 3 after a direct request for the code](docs/images/play.jpg) | ![A reply replaced by "Blocked by the filter"](docs/images/filter.jpg) | ![The vault door swinging open](docs/images/won.jpg) |
+
 ---
 
 ## How it works

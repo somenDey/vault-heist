@@ -30,7 +30,7 @@ from app.game.engine import Attempt, ChatTurn, GameEngine, GameError
 from app.game.guard import MAX_SUSPICION
 from app.game.levels import LEVELS, UnknownLevelError, get_level
 from app.llm.client import LLMError, LLMResponse
-from app.llm.litellm_client import LiteLLMClient
+from app.llm.factory import create_llm_client
 
 DIM, BOLD, RED, GREEN, RESET = "\033[2m", "\033[1m", "\033[31m", "\033[32m", "\033[0m"
 
@@ -185,7 +185,7 @@ def main() -> None:
         sys.exit("The database isn't set up yet. Run `just migrate` first.")
     recorder = DatabaseRecorder(session_factory, session_id)
 
-    engine = GameEngine.from_settings(settings, LiteLLMClient.from_settings(settings), recorder)
+    engine = GameEngine.from_settings(settings, create_llm_client(settings), recorder)
     print(f"Vault Heist · model: {settings.llm_model} · session: {session_id}")
     asyncio.run(TerminalGame(engine, reveal=args.reveal).run(args.level))
 
