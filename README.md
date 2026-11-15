@@ -7,7 +7,7 @@
 
 Under the surface, it's a **security testbed for AI agents**: a hands-on way to explore prompt injection, guardrails, evaluation and observability. Every attempt is logged, and in later phases every attack that works becomes a test the defences must pass from then on.
 
-> **Status: Phase 1 in progress.** The game is playable on your own computer: see [getting started](docs/getting-started.md). Follow along in the [roadmap](docs/roadmap.md).
+> **Status: Phase 1 complete ([v0.1.0](CHANGELOG.md)).** The game is playable on your own computer, with or without an API key: see [getting started](docs/getting-started.md). Next up is Phase 2 in the [roadmap](docs/roadmap.md).
 
 ![The Vault Heist start screen: a gold stencil title beside a steel vault door](docs/images/home.jpg)
 
@@ -22,7 +22,7 @@ Under the surface, it's a **security testbed for AI agents**: a hands-on way to 
 1. You pick a level and start chatting with **Gus**, the night-shift guard.
 2. Gus knows a secret vault code, chosen at random just for you.
 3. You try to get it out of him with charm, tricks or cunning. Then type it into the **Enter vault code** box.
-4. Push too hard and his **suspicion meter** climbs. At 10, he calls security, and you start again with a new code.
+4. Push too hard and his **suspicion meter** climbs. At 10, or after 5 wrong guesses, he calls security, and you start again with a new code.
 
 | Level | Defence |
 |---|---|
@@ -32,11 +32,19 @@ Under the surface, it's a **security testbed for AI agents**: a hands-on way to 
 
 Full rules: [Game design](docs/game-design.md) · [How to play](docs/how-to-play.md)
 
+## What the playtest found
+
+Before releasing, I attacked my own guard with 20 techniques across the three levels and wrote up every result in the [playtest notes](docs/playtest-notes.md). The highlights:
+
+- **The weakest point wasn't the AI.** No conversation attack beat Gus on Claude Haiku, but a script beat the hardest level in under a second by guessing every word in the public code list. A per-attempt guess limit wasn't enough on its own (restarting is free), so the fix is layered, and the remaining gap is documented.
+- **Rules that must hold belong in code.** The prompt asked for gentle suspicion and the model ignored it; a cap in the game engine never fails.
+- **A result needs a control.** One "leak" turned out to be the guard's stock anecdote, which he tells whatever the code is. Checking against other codes caught it before it was logged as a finding.
+
 ## Roadmap
 
 | Phase | Name | Focus | Status |
 |---|---|---|---|
-| 1 | The Guard | Project foundation, LLM basics, a playable 3-level game | 🚧 In progress |
+| 1 | The Guard | Project foundation, LLM basics, a playable 3-level game | ✅ Done (v0.1.0) |
 | 2 | The Guard Gets Powers | Tool calling, agent loop, mock bank backend, LangGraph | Planned |
 | 3 | Defence in Depth | Guardrails, policy engine, supervisor agent, human approval, RAG | Planned |
 | 4 | The Red Team Lab | Attack library, automated attacker agent, evals in CI | Planned |

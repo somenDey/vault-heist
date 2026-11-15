@@ -4,7 +4,7 @@ Vault Heist is built in seven phases. Each phase leaves a working, documented ga
 
 | Phase | Name | Focus | Status |
 |---|---|---|---|
-| 1 | The Guard | Project foundation, LLM basics, a playable 3-level game | 🚧 In progress |
+| 1 | The Guard | Project foundation, LLM basics, a playable 3-level game | ✅ Done (v0.1.0) |
 | 2 | The Guard Gets Powers | Tool calling, agent loop, mock bank backend, LangGraph | Planned |
 | 3 | Defence in Depth | Guardrails, policy engine, supervisor agent, human approval, indirect injection, RAG | Planned |
 | 4 | The Red Team Lab | Attack library, automated attacker agent, evals in CI, false-refusal measurement | Planned |
@@ -25,17 +25,17 @@ Vault Heist is built in seven phases. Each phase leaves a working, documented ga
 | 6 | Database and logging | ✅ Done |
 | 7 | API endpoints | ✅ Done |
 | 8 | Frontend | ✅ Done |
-| 9 | Playtest and learn | ⏳ Next |
-| 10 | Documentation pass and `v0.1.0` release | |
+| 9 | Playtest and learn | ✅ Done |
+| 10 | Documentation pass and `v0.1.0` release | ✅ Done |
 
 ## Phase 1 definition of done
 
-- [ ] Public GitHub repo with a clean structure, MIT license, and green CI badge
+- [x] Public GitHub repo with a clean structure, MIT license, and green CI badge
 - [x] Three playable levels in the browser, with random per-session codes and a suspicion meter
-- [ ] Model switchable via `.env` (at least two providers tested)
-- [ ] Every interaction logged with tokens, cost and latency
+- [x] Model switchable via `.env` (at least two providers tested: Anthropic and Ollama, see [playtest notes](playtest-notes.md#provider-comparison-part-4))
+- [x] Every interaction logged with tokens, cost and latency
 - [x] Tests for the LLM layer (fake client), game logic, database and API; frontend component tests
-- [ ] README, getting-started, how-to-play, game design, architecture, development, roadmap and playtest notes all written and accurate
+- [x] README, getting-started, how-to-play, game design, architecture, development, roadmap and playtest notes all written and accurate
 - [x] At least 2 ADRs
-- [ ] A fresh clone runs by following the docs alone
-- [ ] `v0.1.0` release published
+- [x] A fresh clone runs by following the docs alone
+- [x] `v0.1.0` release published
