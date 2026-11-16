@@ -15,7 +15,7 @@ import type {
 export const API_URL: string = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 const SESSION_KEY = 'vault-heist.session'
 
-/** An error from the API, with its stable `code` (see docs/architecture.md). */
+/** An error from the API, with its stable `code` (see docs/project/architecture.md). */
 export class ApiError extends Error {
   readonly status: number
   readonly code: string

@@ -21,7 +21,7 @@ Phase 1, "The Guard": a playable three-level game against an AI bank guard, buil
 
 ### Security
 
-Found in the playtest, fixed and re-tested (details in the [playtest notes](docs/playtest-notes.md)):
+Found in the playtest, fixed and re-tested (details in the [playtest notes](docs/project/playtest-notes.md)):
 
 - **Unlimited guesses let a script brute-force any level** from the public word list. Now the 5th wrong guess in an attempt gets the player caught, and a session may make 20 wrong guesses a day.
 - **Suspicion could jump from 0 to 8 on a single message.** It now rises by at most 3 per message, enforced in the game engine, not just requested in the prompt.

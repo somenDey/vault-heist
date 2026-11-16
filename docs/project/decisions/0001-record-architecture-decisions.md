@@ -11,7 +11,7 @@ This project will make many technical choices over seven phases: frameworks, lib
 
 We record every significant decision as an **Architecture Decision Record (ADR)**, following the format described by [Michael Nygard](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions).
 
-- ADRs live in `docs/decisions/`, named `NNNN-short-title.md` and numbered in order.
+- ADRs live in `docs/project/decisions/`, named `NNNN-short-title.md` and numbered in order.
 - Each ADR is short: context, decision, consequences.
 - An accepted ADR is not edited to change its decision. If a decision changes, we write a new ADR and mark the old one `Superseded by NNNN`.
 - An ADR is added in the same commit as the change it describes.
