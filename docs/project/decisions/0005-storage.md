@@ -23,7 +23,7 @@ Every session, attempt, message and guess must be stored. The stored messages be
 
 ## Consequences
 
-- Every interaction is queryable with plain SQL from day one (`docs/development.md` has examples).
+- Every interaction is queryable with plain SQL from day one (`docs/project/development.md` has examples).
 - The vault code is stored in the database. That's fine for a game, but the database must never be committed or shared publicly. `*.db` is git-ignored.
 - Sync database calls inside async code will need revisiting before the game takes heavy traffic.
 - Each player session gets a random UUID. There are no accounts until Phase 7.

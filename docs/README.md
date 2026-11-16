@@ -1,23 +1,30 @@
 # Documentation
 
-| Document | What it covers | Who it's for |
-|---|---|---|
-| [Getting started](getting-started.md) | Install and run the game on your computer | Everyone |
-| [How to play](how-to-play.md) | The rules, and how to win | Players |
-| [Game design](game-design.md) | The guard, the levels, the rules in detail | Players and developers |
-| [Architecture](architecture.md) | How the pieces fit together | Developers |
-| [Development](development.md) | Branches, commits, testing, adding a level | Developers |
-| [Roadmap](roadmap.md) | The seven phases and where we are now | Everyone |
-| [Playtest notes](playtest-notes.md) | Attacks that worked, and what we learned | Everyone |
-| [Decisions](decisions/) | Why the project is built the way it is (ADRs) | Developers |
-| [Changelog](../CHANGELOG.md) | What changed in each release | Everyone |
+Start with what you came to do.
 
-## Architecture decision records
+## I want to play the game
 
-- [0001 – Record architecture decisions](decisions/0001-record-architecture-decisions.md)
-- [0002 – Phase 1 tech stack](decisions/0002-phase-1-tech-stack.md)
-- [0003 – Quality gates: pre-commit hooks and CI](decisions/0003-quality-gates.md)
-- [0004 – Structured output from the guard](decisions/0004-structured-output.md)
-- [0005 – Storing every interaction](decisions/0005-storage.md)
-- [0006 – API design](decisions/0006-api-design.md)
-- [0007 – Frontend tooling and design](decisions/0007-frontend.md)
+| Read | To |
+|---|---|
+| [Getting started](getting-started.md) | Install the game, start it, and learn the rules |
+
+That's the only page you need.
+
+## I want to understand or build the project
+
+Everything about how Vault Heist is designed and built is in [`project/`](project/).
+
+| Read | To find out |
+|---|---|
+| [Project memory](project/memory.md) | Where the project stands today, and what comes next |
+| [Product requirements](project/prd.md) | What we're building, and for whom |
+| [Game design](project/game-design.md) | The guard, the levels and the rules, in detail |
+| [Architecture](project/architecture.md) | How the pieces fit together |
+| [Design system](project/design.md) | How the game looks: colours, fonts, components |
+| [Rules](project/rules.md) | What to use, what to avoid, and how to write |
+| [Development](project/development.md) | How to work on it: branches, tests, releases |
+| [Playtest notes](project/playtest-notes.md) | Attacks tried against the guard, and what they taught us |
+| [Roadmap and phase plans](project/phases/README.md) | The seven phases, and the plan for each |
+| [Decisions](project/decisions/) | Why the project is built the way it is |
+
+What changed in each release is in the [changelog](../CHANGELOG.md).

@@ -34,7 +34,7 @@ The project's structure diagram lists a `Makefile`; in this repository it is a `
 
 ## Consequences
 
-- Contributors need `uv`, Node.js and `just` installed. All three are single installs on every OS, documented in [getting started](../getting-started.md).
+- Contributors need `uv`, Node.js and `just` installed. All three are single installs on every OS, documented in [getting started](../../getting-started.md).
 - Wrapping LiteLLM means a little more code up front, but provider details never leak into game logic, and tracing and tool calling can be added in one place later.
 - SQLite limits us to a single server process. That's fine until deployment in Phase 7.
 - Exact library versions are not recorded here. They are pinned in `uv.lock` and `package-lock.json`.

@@ -26,7 +26,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 | `chore` | Tooling, config, housekeeping |
 | `ci` | CI configuration |
 
-Scopes: `backend`, `frontend`, `llm`, `game`, `db`, `api`, `docs`.
+Scopes: `backend`, `frontend`, `llm`, `game`, `db`, `api`, `agent`, `bank`, `evals`, `infra`, `docs`.
 
 ## Branches and pull requests
 
@@ -87,7 +87,7 @@ One-time setup per clone:
 pre-commit install
 ```
 
-After that, every `git commit` runs the hooks in [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) on the staged files:
+After that, every `git commit` runs the hooks in [`.pre-commit-config.yaml`](../../.pre-commit-config.yaml) on the staged files:
 
 - **no-commit-to-branch:** refuses commits made directly on `main`.
 - **File hygiene:** trailing whitespace, missing final newline, CRLF line endings, invalid YAML/TOML, leftover merge-conflict markers, files over 500 KB.
@@ -110,7 +110,7 @@ Never skip hooks with `--no-verify`. If a hook is wrong, fix the hook.
 
 ### Continuous integration
 
-[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs three jobs on GitHub's Linux machines, side by side:
+[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) runs three jobs on GitHub's Linux machines, side by side:
 
 - **Backend:** installs uv and just, runs `just install-backend` (which fails if `uv.lock` is out of date) and then `just check-backend`.
 - **Frontend:** installs Node.js and just, runs `just install-frontend` (`npm ci`, which fails if `package-lock.json` is out of date) and then `just check-frontend`, which also makes a production build.
@@ -333,13 +333,13 @@ The demo Gus (`backend/app/llm/demo_client.py`) follows three rules: a crossword
 1. If the level needs new rules for Gus, add a prompt file in `backend/app/prompts/guard/`, e.g. `level_4.md`. It must contain `{vault_code}` where the code goes. Gus's persona is added in front of it automatically.
 2. Add a `Level(...)` entry to `LEVELS` in `backend/app/game/levels.py`: id, name, description, prompt file name, and whether the output filter applies.
 3. Run `just test`. `test_levels.py` checks that every level's prompt exists and has a place for the code.
-4. Update the levels tables in `docs/game-design.md` and `docs/how-to-play.md`.
+4. Update the levels tables in `docs/project/game-design.md` and `docs/getting-started.md`.
 
 The engine needs no changes.
 
 ## Releasing a version
 
-Versions follow [semantic versioning](https://semver.org/): `0.x` while the project is young, with the minor number going up at the end of each phase. Every release is recorded in [`CHANGELOG.md`](../CHANGELOG.md).
+Versions follow [semantic versioning](https://semver.org/): `0.x` while the project is young, with the minor number going up at the end of each phase. Every release is recorded in [`CHANGELOG.md`](../../CHANGELOG.md).
 
 1. On a release branch, move the changelog's **Unreleased** notes under the new version and date, and set the version in `backend/pyproject.toml` and in `frontend/` (`npm version 0.2.0 --no-git-tag-version`, which updates `package.json` and `package-lock.json` together).
 2. Merge the release PR as usual.

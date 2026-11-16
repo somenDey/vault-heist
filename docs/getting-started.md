@@ -1,6 +1,6 @@
 # Getting started
 
-This guide assumes no programming experience. Every step says what to type and what you should see.
+How to install Vault Heist on your own computer, start it, and play. This guide assumes no programming experience. Every step says what to type and what you should see.
 
 ## What you'll need
 
@@ -54,7 +54,7 @@ To stop both, press `Ctrl+C` in the terminal.
 
 ## 4. Play
 
-Open **http://localhost:5173** in your browser, choose a vault, and start talking to Gus. The rules are in [How to play](how-to-play.md).
+Open **http://localhost:5173** in your browser, choose a vault, and start talking to Gus. The rules are in [How to play](#how-to-play) below.
 
 If the page says it can't reach the bank's server, check that the backend is still running in the terminal, and that http://localhost:8000/api/health shows something like:
 
@@ -66,4 +66,38 @@ If the page says it can't reach the bank's server, check that the backend is sti
 
 - **Without an API key:** `just demo` runs the game with a stand-in for Gus that follows a few fixed rules. It costs nothing and is easy to beat (hint: he loves crosswords), so it's for trying the game out, not for real attacks. It uses its own database, `backend/demo.db`.
 - **In the terminal:** `just chat`. Type to talk to Gus, and `/guess WORD` to try a code.
-- **Through the API page:** with `just dev` running, open http://localhost:8000/docs. See [development](development.md#playing-through-the-api) for a walkthrough.
+- **Through the API page:** with `just dev` running, open http://localhost:8000/docs. See [development](project/development.md#playing-through-the-api) for a walkthrough.
+
+## How to play
+
+### Your goal
+
+Get into the vault. To do that you need the **vault code**, a single word. The only one who knows it is **Gus**, the night-shift security guard. He's been told never to share it.
+
+### How a level works
+
+1. **Chat with Gus.** Type anything you like. Be friendly, be sneaky, be creative.
+2. **Watch his suspicion meter.** Every reply comes with a score from 0 to 10 showing how suspicious he is of you.
+3. **Enter the code.** When you think you know it, type it into the **Enter vault code** box. Guessing is separate from chatting, so Gus doesn't see your guesses, but he hears the dial. You get **5 wrong guesses** per attempt.
+4. **Get it right** and the level is cleared.
+
+### Getting caught
+
+If Gus's suspicion reaches **10**, or you make **5 wrong guesses**, he calls security. The level resets: a **new** code, and Gus forgets your conversation. Anything you learned about the old code is useless.
+
+### The levels
+
+| Level | What you're up against |
+|---|---|
+| 1. Naive guard | Gus has been told not to share the code, but he's tired, trusting and can't resist a word game. A good place to start. |
+| 2. Trained guard | Gus has been warned about common tricks. You'll need to be cleverer. |
+| 3. Guard with a filter | Even if Gus slips up, a filter blocks any reply containing the code. |
+
+### Limits
+
+To keep costs fair, there's a maximum message length, a maximum number of messages per level attempt, a daily limit on messages, and a daily limit of 20 wrong guesses. You'll see a clear message if you hit one.
+
+### Tips
+
+- The code is different every time you play, so there's no point searching the internet for it.
+- If an attack works, write it down. The best ones end up in the [playtest notes](project/playtest-notes.md).

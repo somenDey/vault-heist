@@ -17,6 +17,35 @@ flowchart LR
     Repo --> DB[("SQLite")]
 ```
 
+## How a player moves through the game
+
+```mermaid
+flowchart TD
+    Home["Start screen ( / )<br/>title, vault door, three level cards"] -- "Start level 1 / Continue / a level card" --> Play["Level screen ( /levels/N )<br/>chat, suspicion gauge, vault code box"]
+    Play -- "Send a message" --> Reply["Gus replies<br/>suspicion and room light update"]
+    Reply --> Play
+    Reply -- "Suspicion reaches 10" --> Caught["Caught dialog"]
+    Play -- "Wrong code (1st to 4th)" --> Play
+    Play -- "5th wrong code" --> Caught
+    Play -- "Correct code" --> Won["Vault opens dialog"]
+    Caught -- "Try again with a new code" --> Play
+    Won -- "Next level" --> Play
+    Won -- "All levels" --> Home
+    Play -- "All levels link" --> Home
+```
+
+| Screen or action | What the player sees | What happens behind it |
+|---|---|---|
+| **Start screen** (`/`) | The title, the vault door, a "Start level 1" button (or "Continue with level N"), and three level cards showing which are cracked | `GET /api/levels`. An anonymous session is created on the first visit and kept in the browser |
+| **Open a level** (`/levels/N`) | Gus's badge, the chat, the suspicion gauge, the vault code box, and how many messages are left | `GET /api/levels/N` brings back any conversation in progress, so a reload resumes the game |
+| **Send a message** | The message appears straight away, then "Gus is thinking", then his reply. The gauge and the room light move with his suspicion | `POST /api/levels/N/chat`. If sending fails, the message is removed again |
+| **Reply blocked** (Level 3) | A dashed red bubble saying the bank's security filter blocked the reply | The output filter found the code in Gus's reply. The original is stored, not shown |
+| **Wrong code** | The code box shakes, and the number of guesses left goes down | `POST /api/levels/N/guess` |
+| **Caught** (suspicion 10, or the 5th wrong code) | A red "Gus called security" dialog with a "Try again with a new code" button | The attempt ends as `caught`. The next action starts a fresh attempt with a new code |
+| **Correct code** | The vault door swings open, with "Next level" and "All levels" buttons | The attempt ends as `won`, and the level shows as cracked |
+| **Start over with a new code** | An empty chat, and the gauge back at 0 | `POST /api/levels/N/reset` |
+| **Out of messages** | The chat input is switched off | The only way on is to start over with a new code |
+
 ## What happens when the player sends a message
 
 1. The **frontend** posts the message to `POST /api/levels/{level_id}/chat`.
@@ -119,10 +148,7 @@ Usage columns are filled in for Gus's replies only. When a reply needed a retry,
 
 ## Rules that keep the design clean
 
-- **Business logic lives in `game/`, not in routes.** Routes translate HTTP to function calls and back.
-- **Only `llm/` talks to model providers.** Everything else uses the `LLMClient` interface, so tests can use a fake client with no API calls and no cost.
-- **Prompts are files** in `prompts/guard/`, versioned and reviewed like code.
-- **Levels are data.** Adding one doesn't change the engine.
+The rules that protect this design (thin routes, one gateway to the model, prompts as files, levels as data) are in [rules](rules.md#code-rules).
 
 ## Repository layout
 
@@ -130,7 +156,10 @@ Usage columns are filled in for Gus's replies only. When a reply needed a retry,
 vault-heist/
 ├── README.md, LICENSE, justfile, .env.example, ...
 ├── .github/workflows/ci.yml      # CI: lint, types, tests, secret scan
-├── docs/                         # You are here; images/ holds the README screenshots
+├── docs/
+│   ├── getting-started.md        # install, run and play
+│   ├── images/                   # the README screenshots
+│   └── project/                  # You are here: how the project is designed and built
 ├── backend/
 │   ├── pyproject.toml, uv.lock   # dependencies and tool settings
 │   ├── app/
