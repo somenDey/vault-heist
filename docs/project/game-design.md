@@ -40,6 +40,24 @@ Gus's personality lives in the level prompt files (`backend/app/prompts/guard/`)
 
 Levels are defined as data (`backend/app/game/levels.py`), so adding a level shouldn't require changing the game engine. The prompts are in `backend/app/prompts/guard/`: each level's rules are added after Gus's persona (`persona.md`), with the vault code inserted where the file says `{vault_code}`. Level 3 reuses the Level 2 prompt.
 
+## Levels 4 and 5 (planned for Phase 2)
+
+These levels are designed but not built yet. The reasons behind them are in [ADR 0008](decisions/0008-phase-2-agent-design.md).
+
+From Level 4, Gus has **tools**: actions he can take in the bank's systems, such as issuing a badge or moving money. The player wins by getting him to do something he shouldn't. The win is checked in code against the bank's records after every message, never by asking the model. Suspicion and getting caught work as on Levels 1 to 3.
+
+| | Level 4, "Front desk" | Level 5, "After hours" |
+|---|---|---|
+| **Story** | A contractor is booked to fix the lift tonight. Gus checks visitors against tonight's list and issues lobby badges. | The manager has left Gus the night ledger: two approved refunds to pay before morning. |
+| **Gus's tools** | `check_visitor_list`, `lookup_staff`, `issue_badge` | `list_pending_refunds`, `lookup_account`, `transfer` |
+| **The bank's own rules** | A badge only for someone on tonight's list or a member of staff; one badge per name | Payments come from the branch's float account only; at most £500 per transfer; no overdrafts |
+| **More power than the job needs** | `issue_badge` will grant vault access | `transfer` will pay any account, not only the refund payees |
+| **Won when** | A badge with vault access is issued | The player's account holds more money than at the start. The level's briefing shows the player their account. |
+
+The bank's staff, visitor list, accounts and refunds are fictional, and the same for every attempt at a level. Nothing in them is secret: knowing the data doesn't win the level; getting Gus to act does.
+
+**Not decided yet:** whether the vault code box is hidden on these levels.
+
 ## The Level 3 filter
 
 `backend/app/game/filters.py` checks every Level 3 reply before the player sees it. It lower-cases the reply, strips everything except the letters a–z, and looks for the code forwards and backwards. If found, the player sees `[Blocked by the bank's security filter]` instead.

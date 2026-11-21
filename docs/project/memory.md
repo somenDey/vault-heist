@@ -5,8 +5,8 @@
 ## Where we are
 
 - **Version:** `v0.1.0` (Phase 1 complete, released 2026-11-15).
-- **Current phase:** Phase 2, "The Guard Gets Powers". Not started.
-- **Next step:** Phase 2, Part 0: agree the agent design and write its ADR. See [`docs/project/phases/phase-2.md`](phases/phase-2.md).
+- **Current phase:** Phase 2, "The Guard Gets Powers". Part 0 (design) done.
+- **Next step:** Phase 2, Part 1: the pretend bank. See [`docs/project/phases/phase-2.md`](phases/phase-2.md).
 
 ## What exists today
 
@@ -28,6 +28,7 @@
 | API design: anonymous sessions, one error shape | [ADR 0006](decisions/0006-api-design.md) |
 | oxlint instead of ESLint; Tailwind 4 tokens in CSS; vault design | [ADR 0007](decisions/0007-frontend.md) |
 | Every change on its own branch, squash-merged through a PR | [development](development.md#branches-and-pull-requests) |
+| Phase 2 agent design: Levels 4 and 5, `bank/` and `agent/` folders, bank state in real tables, the `AgentRuntime` interface with an `answer` tool | [ADR 0008](decisions/0008-phase-2-agent-design.md) |
 
 ## Changes from the Phase 1 brief
 
@@ -88,7 +89,7 @@ From the Phase 1 playtest ([notes](playtest-notes.md)):
 
 | Idea or fix | Phase |
 |---|---|
-| Keep the vault code away from the model, e.g. a tool that checks a code without Gus ever seeing it. As long as the model knows the secret, it can leak it. | 2 |
+| Keep the vault code away from the model, e.g. a tool that checks a code without Gus ever seeing it. As long as the model knows the secret, it can leak it. Moved from Phase 2: it's a defence ([ADR 0008](decisions/0008-phase-2-agent-design.md)). | 3 (Part 4) |
 | Close the filter gaps (acrostics, translations, descriptions, split codes) | 3 |
 | Measure false positives: honest players the guard treats as attackers | 4 |
 | Confirm why the first Anthropic call is slow (possibly schema compilation) | 5 |
@@ -104,7 +105,8 @@ From the Phase 1 playtest ([notes](playtest-notes.md)):
 
 ## Open questions
 
-- Phase 2: hand-written agent loop first, then LangGraph, behind one interface? Which tools does each new level get, and what counts as a win?
+- Phase 2: hide the vault code box on Levels 4 and 5? Decide in Part 5 or Part 7.
+- Phase 2: the step limit and cost budget per message (set in Part 4 from measured runs), and whether `granite4.2:8b` supports tools (Part 3).
 - Level 1 role-play: leave it as a door that stays shut, or relax the persona's "stay in character" for Level 1 only?
 
 ## Session log
@@ -113,6 +115,7 @@ Newest first. One or two lines per session: what was done, and anything the next
 
 | Date | Part | What happened |
 |---|---|---|
+| 2026-11-16 to 2026-11-20 | 2.0 | Agreed the agent design: ADR 0008. Updated the Phase 2 plan, game design (Levels 4 and 5), PRD and rules; moved "keep the code away from the model" to Phase 3, Part 4. Checked versions: LiteLLM 1.109.0 is current; 1.107.0 was malicious, never install it. LangGraph 1.2 line; `langgraph.prebuilt` is deprecated. |
 | 2026-11-16 | Phase 2 prep | Added product requirements, design system, project rules, this file and part-by-part plans for Phases 2 to 7. Then tidied the docs: `docs/` now holds only getting started (with how to play folded in); everything about building the project moved to `docs/project/`; the roadmap became `phases/README.md`. |
 | 2026-11-15 | 1.10 | Docs pass, `CHANGELOG.md`, fresh-clone test from GitHub (passed), release PR, tag `v0.1.0`. |
 | 2026-11-07 to 2026-11-15 | 1.9 | Playtest: 20 attacks, all conversation attacks failed on Haiku, guess-box brute force won. Fixes: guess limits, suspicion cap, Level 1 tutorial; Level 2 small talk needed no change. Then demo Gus and the screenshot script. |
