@@ -17,7 +17,8 @@
 
 - **Game rules live in `backend/app/game/`.** API routes stay thin: they turn a web request into a function call and back.
 - **Only `backend/app/llm/` talks to model providers.** Everything else uses the `LLMClient` interface.
-- **Prompts are files** in `backend/app/prompts/`. **Levels are data** in `backend/app/game/levels.py`.
+- **Prompts are files** in `backend/app/prompts/`. **Levels are data** in `backend/app/game/levels.py`. Tool descriptions are the one exception: they live in code, next to the tool's argument types ([ADR 0008](decisions/0008-phase-2-agent-design.md)).
+- **The bank uses nothing else in the app, and the agent never uses the bank or the game.** The full "may use" table is in [ADR 0008](decisions/0008-phase-2-agent-design.md#2-where-the-code-lives).
 - **Storage goes through `GameRecorder`.** The game engine never touches the database directly.
 - **Rules that must hold are enforced in code, not only in prompts.** The playtest proved it: the model ignored a prompt rule that a one-line cap in the engine never breaks.
 - **Wins and rule checks are decided in code,** never by asking the model.

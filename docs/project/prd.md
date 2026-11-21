@@ -4,7 +4,7 @@
 
 ## What we're building
 
-Vault Heist is a browser game in which players try to rob a fictional bank, Granite & Sons Savings, by talking to its AI staff. The staff are AI agents. In Phase 1 there is one, Gus the night guard, who knows a secret vault code. From Phase 2 the staff also have real powers inside a pretend banking system: opening doors, issuing badges, looking up staff records and moving money. Players win by tricking an agent into revealing something or doing something it shouldn't. Each level adds a stronger, measurable layer of defence. Every attempt is logged, and in later phases every attack that works becomes an automated test the defences must pass from then on. The game is fun for players and, underneath, a working demonstration of how to make AI agents that take actions safe.
+Vault Heist is a browser game in which players try to rob a fictional bank, Granite & Sons Savings, by talking to its AI staff. The staff are AI agents. In Phase 1 there is one, Gus the night guard, who knows a secret vault code. From Phase 2 the staff also have real powers inside a pretend banking system: issuing badges, looking up staff records and moving money. Players win by tricking an agent into revealing something or doing something it shouldn't. Each level adds a stronger, measurable layer of defence. Every attempt is logged, and in later phases every attack that works becomes an automated test the defences must pass from then on. The game is fun for players and, underneath, a working demonstration of how to make AI agents that take actions safe.
 
 ## Why it matters
 
@@ -53,8 +53,8 @@ Vault Heist turns these risks into levels a player can try, and turns the defenc
 | Model switchable by config (Anthropic, OpenAI, Gemini, local Ollama) | 1 | ✅ |
 | Free demo mode with no API key | 1 | ✅ |
 | Works in the browser and on phones; keyboard and screen-reader accessible | 1 | ✅ |
-| A pretend bank (doors, badges, staff records, accounts) the guard can act on through tools | 2 | 🔜 |
-| Levels won by making the guard *do* something (open a door, move money), not just say something | 2 | 🔜 |
+| A pretend bank (staff records, visitor list, badges, accounts) the guard can act on through tools | 2 | 🔜 |
+| Levels won by making the guard *do* something (issue a vault badge, move money), not just say something | 2 | 🔜 |
 | The player sees what the guard did (an action log in the chat) | 2 | 🔜 |
 | Guardrails outside the model: input and output checks, a policy engine for every action, a supervisor agent, human approval | 3 | ⏳ |
 | Indirect injection levels: attacks hidden in forms, emails or documents the guard reads | 3 | ⏳ |
@@ -100,5 +100,4 @@ Vault Heist turns these risks into levels a player can try, and turns the defenc
 
 ## Open questions
 
-- Phase 2: exactly which tools each new level gets, and what counts as a win on each (settled in Phase 2, Part 0).
 - Phase 7: which sign-in method, and whether play stays possible without an account.

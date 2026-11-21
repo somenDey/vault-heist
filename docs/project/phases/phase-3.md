@@ -28,6 +28,7 @@ Add layers of defence around the guard, one at a time, and turn each layer into 
 
 - The Level 3 filter misses acrostics, translations, descriptions and split-up codes.
 - The filter's block tells the player the code was in the reply.
+- As long as Gus knows the vault code, he can leak it. Keeping the code away from the model was moved here from Phase 2 ([ADR 0008](../decisions/0008-phase-2-agent-design.md#6-keeping-the-vault-code-away-from-the-model-moves-to-phase-3-part-4)).
 
 ## Parts
 
@@ -68,9 +69,9 @@ Each part: **Goal → Build → Learn → Done when → Branch and PR title.**
 ### Part 4: Output checks
 
 - **Goal:** close the known gaps in the Level 3 filter, without leaking through the block itself.
-- **Build:** stronger rule-based checks; an AI-based check for acrostics, translations and descriptions; a blocked reply replaced by an in-character answer that gives nothing away; the "known gap" tests updated to show what is now caught.
+- **Build:** stronger rule-based checks; an AI-based check for acrostics, translations and descriptions; a blocked reply replaced by an in-character answer that gives nothing away; the "known gap" tests updated to show what is now caught. Then the structural alternative: a level where Gus never sees the vault code and checks guesses with a `check_code` tool instead, compared with the stronger filter. Watch for the new attack it opens: talking Gus into testing many guesses for the player.
 - **Learn:** the limits of output filtering, and information leaks through side channels.
-- **Done when:** the Phase 1 attacks that beat the filter are re-run and logged, with results.
+- **Done when:** the Phase 1 attacks that beat the filter are re-run and logged, with results, against both the stronger filter and the level where Gus never sees the code.
 - **Branch / PR:** `feat/output-checks` · `feat(game): strengthen output checks`
 
 ### Part 5: The supervisor agent

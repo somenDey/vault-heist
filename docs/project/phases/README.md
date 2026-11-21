@@ -5,7 +5,7 @@
 | Phase | Name | Focus | Status | Plan |
 |---|---|---|---|---|
 | 1 | The Guard | Project foundation, LLM basics, a playable 3-level game | ✅ Done (v0.1.0) | [Record](phase-1.md) |
-| 2 | The Guard Gets Powers | Tool calling, agent loop, pretend bank, LangGraph | Next | [Plan](phase-2.md) |
+| 2 | The Guard Gets Powers | Tool calling, agent loop, pretend bank, LangGraph | In progress | [Plan](phase-2.md) |
 | 3 | Defence in Depth | Guardrails, policy engine, supervisor agent, human approval, indirect injection, RAG | Planned | [Plan](phase-3.md) |
 | 4 | The Red Team Lab | Attack library, automated attacker agent, evals in CI, false-refusal measurement | Planned | [Plan](phase-4.md) |
 | 5 | Security Cameras | OpenTelemetry tracing, Langfuse, heist replay page, cost limits | Planned | [Plan](phase-5.md) |
